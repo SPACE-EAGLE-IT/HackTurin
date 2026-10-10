@@ -29,3 +29,12 @@ captures/
 # OS / editor
 .DS_Store
 Thumbs.db
+
+# Piattaforma web (Next.js)
+web/node_modules/
+web/.next/
+web/.env*
+!web/.env.example
+web/next-env.d.ts
+# copiato da node_modules in postinstall
+web/public/maplibre-gl-worker.mjs
