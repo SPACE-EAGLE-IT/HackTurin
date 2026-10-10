@@ -4,7 +4,7 @@ import { Flame, MapPin, X, Cpu, Radio, Camera, Thermometer } from "lucide-react"
 import ReportMap, { type PodDevice } from "@/components/ReportMap";
 import { CATEGORIES } from "@/lib/categories";
 import { CatDot, StatusBadge, timeAgo } from "@/components/ui";
-import { supabasePublic } from "@/lib/supabase";
+import { subscribeReports } from "@/lib/supabase";
 import type { Report } from "@/lib/reports";
 import { adminFetch } from "@/lib/adminClient";
 import { useEnvironment } from "@/components/useEnvironment";
@@ -33,11 +33,8 @@ export default function MappaOperativa() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     const poll = setInterval(load, 20000);
-    const sb = supabasePublic();
-    const ch = sb.channel("reports-ops")
-      .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, () => { load(); setFlash(true); setTimeout(() => setFlash(false), 2500); })
-      .subscribe((s) => setLive(s === "SUBSCRIBED"));
-    return () => { clearInterval(poll); sb.removeChannel(ch); };
+    const unsub = subscribeReports("reports-ops", () => { load(); setFlash(true); setTimeout(() => setFlash(false), 2500); }, setLive);
+    return () => { clearInterval(poll); unsub(); };
   }, [load]);
 
   const toggle = (arr: string[], v: string, set: (a: string[]) => void) => set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);

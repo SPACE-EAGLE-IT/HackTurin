@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { X, MapPin } from "lucide-react";
 import ReportMap from "@/components/ReportMap";
 import { CatDot, StatusBadge, timeAgo } from "@/components/ui";
-import { supabasePublic } from "@/lib/supabase";
+import { subscribeReports } from "@/lib/supabase";
 import type { Report } from "@/lib/reports";
 import { useEnvironment } from "@/components/useEnvironment";
 import { aqiBand, WEATHER } from "@/lib/metrics";
@@ -26,11 +26,8 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     const poll = setInterval(load, 30000);
-    const sb = supabasePublic();
-    const ch = sb.channel("reports-public")
-      .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, () => { load(); setFlash(true); setTimeout(() => setFlash(false), 2500); })
-      .subscribe();
-    return () => { clearInterval(poll); sb.removeChannel(ch); };
+    const unsub = subscribeReports("reports-public", () => { load(); setFlash(true); setTimeout(() => setFlash(false), 2500); });
+    return () => { clearInterval(poll); unsub(); };
   }, [load]);
 
   return (

@@ -38,3 +38,4 @@ web/.env*
 web/next-env.d.ts
 # copiato da node_modules in postinstall
 web/public/maplibre-gl-worker.mjs
+web/.vercel/

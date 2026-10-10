@@ -15,3 +15,20 @@ export function supabasePublic() {
   if (!url || !key) throw new Error("Variabili Supabase mancanti (vedi .env.example)");
   return createClient(url, key, { auth: { persistSession: false } });
 }
+
+/**
+ * Ascolta in tempo reale le modifiche alla tabella reports. Se le variabili pubbliche mancano
+ * o il canale non si apre, non fa nulla: le pagine restano aggiornate dal polling.
+ */
+export function subscribeReports(channel: string, onChange: () => void, onStatus?: (live: boolean) => void): () => void {
+  try {
+    const sb = supabasePublic();
+    const ch = sb.channel(channel)
+      .on("postgres_changes", { event: "*", schema: "public", table: "reports" }, onChange)
+      .subscribe((s) => onStatus?.(s === "SUBSCRIBED"));
+    return () => { sb.removeChannel(ch); };
+  } catch {
+    onStatus?.(false);
+    return () => {};
+  }
+}
