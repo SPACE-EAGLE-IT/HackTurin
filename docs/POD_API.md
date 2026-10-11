@@ -84,3 +84,37 @@ Risposta `200`: `{"ok": true}`.
 Ogni richiesta (anche quelle sbagliate) compare in tempo reale nella **Console IT** (`/comune/pod`) con il contenuto inviato: è il modo più rapido per fare debug.
 
 Consiglio: se la rete è assente, accodate le segnalazioni sul POD e reinviatele con il loro `captured_at` originale.
+
+## Telefono come POD
+
+Qualsiasi smartphone può fare da POD (su un camion dei rifiuti, un mezzo comunale, la bici di un volontario)
+aprendo la pagina web `/pod-telefono`: nessuna app da installare.
+
+**Collegamento.** Console POD → **Nuovo POD** → tipo **Telefono**. Dopo la creazione la finestra della chiave
+mostra la scheda «Telefono» con un QR e il link `https://<dominio>/pod-telefono#k=<chiave>`. La chiave è nel
+**frammento** dell'URL (dopo `#`): il browser non lo invia mai al server, quindi non finisce nei log. La pagina
+la salva nel telefono (`localStorage`, voce `ts-pod-key`) e la toglie subito dalla barra degli indirizzi.
+«Scollega telefono» la cancella. Servono HTTPS (o `localhost`) per GPS, accelerometro e schermo sempre acceso.
+
+**Cosa invia** (stesse API e stessa chiave di un POD hardware):
+
+| quando | chiamata | contenuto |
+|---|---|---|
+| scossone verticale oltre soglia (≈7 m/s², sensibilità Bassa/Media/Alta), velocità ≥ 8 km/h, GPS ≤ 30 m, almeno 2 s e 25 m dall'ultima buca | `POST /reports` | `category: "buca"`, `confidence` 0,5–0,95 in base al picco |
+| pulsanti «Segnalazione rapida» | `POST /reports` | `rifiuti_abbandonati`, `cassonetto_pieno`, `illuminazione`, `graffiti`, `confidence: 1` |
+| ogni 60 s | `POST /heartbeat` | `lat`, `lon`, `battery`, `firmware: "phone-web 1.0"`, `metrics.speed_kmh`, `metrics.noise_db` |
+| ogni 60 s, se il rumore è attivo | `POST /readings` | `metrics.noise_db` (media del minuto, **stimata**); `lat`/`lon` solo dentro Torino |
+
+Campi di `metadata` nelle segnalazioni:
+
+| campo | significato |
+|---|---|
+| `source` | `"phone"` (rilevata dai sensori) o `"phone_manual"` (pulsante) |
+| `peak_ms2` | picco dello scossone in m/s² (gravità esclusa) |
+| `speed_kmh` | velocità GPS al momento del rilevamento |
+| `accuracy_m` | precisione GPS in metri |
+| `simulated` | `true` per le buche finte del pulsante «Simula buca» (demo) |
+
+Il microfono è facoltativo e spento di default: l'audio è elaborato sul telefono, mai registrato né inviato;
+parte solo il livello medio in dB. Senza rete le segnalazioni restano in coda sul telefono e vengono reinviate
+al ritorno della connessione (o al heartbeat successivo) con il loro `captured_at` originale.

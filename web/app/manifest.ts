@@ -3,9 +3,9 @@ import type { MetadataRoute } from 'next'
 /** Web app manifest: the icons installed on a phone's home screen. Colours here are metadata, not styling. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'IAMAimpresa Kit',
-    short_name: 'IAMAimpresa',
-    description: 'Task, commesse, accessi e assistente.',
+    name: 'To.Be · un nuovo modo di vivere la città',
+    short_name: 'To.Be',
+    description: 'Segnala, cura e misura la tua città.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff', // ds-allow: manifest metadata

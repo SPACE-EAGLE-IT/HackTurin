@@ -265,9 +265,14 @@ const createSchema = z.object({
   description: optionalText(4000),
   dueDate: dateKeySchema.nullable().optional(),
   reportId: uuidSchema.nullable().optional(),
+  sponsorshipId: uuidSchema.nullable().optional(),
+  teamSize: z.number().int().min(1, 'Almeno 1 persona').max(50, 'Massimo 50 persone').optional(),
 })
 
-/** Staff creates a mission (optionally from a civic report). */
+/**
+ * Staff creates a mission (optionally from a civic report). A company team mission is assigned
+ * straight to the company's account: the ETS covers the team for that day.
+ */
 export async function createMission(input: unknown): Promise<ActionResult<{ id: string }>> {
   const parsed = createSchema.safeParse(input)
   if (!parsed.success) return fail('Controlla i campi', fieldErrorsOf(parsed.error))
@@ -275,6 +280,16 @@ export async function createMission(input: unknown): Promise<ActionResult<{ id: 
   if (denied) return denied
   const session = await getSession()
   const supabase = await createClient()
+  let team: { profile_id: string | null } | null = null
+  if (parsed.data.sponsorshipId) {
+    const { data: plan } = await supabase
+      .from('sponsorships')
+      .select('profile_id, status')
+      .eq('id', parsed.data.sponsorshipId)
+      .maybeSingle()
+    if (!plan || plan.status !== 'active') return fail('Il piano dell’azienda non è attivo')
+    team = plan
+  }
   const { data, error } = await supabase
     .from('missions')
     .insert({
@@ -283,6 +298,9 @@ export async function createMission(input: unknown): Promise<ActionResult<{ id: 
       due_date: parsed.data.dueDate ?? null,
       report_id: parsed.data.reportId ?? null,
       created_by: session?.profile.id ?? null,
+      sponsorship_id: parsed.data.sponsorshipId ?? null,
+      team_size: team ? (parsed.data.teamSize ?? 10) : 1,
+      ...(team?.profile_id ? { volunteer_id: team.profile_id, status: 'assigned' as const } : {}),
     })
     .select('id')
     .single()

@@ -12,17 +12,18 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { CAPS } from '@/lib/civic/cap'
+import type { AdoptionPlan } from '@/lib/payments/plans'
 
 const MAX_CAPS = 5
 const CAP_OPTIONS = CAPS.map(cap => ({ value: cap, label: cap }))
 
-export type PlanOption = { key: 'trimestrale' | 'annuale'; label: string; amount: number }
+export type PlanOption = { key: AdoptionPlan; label: string; amount: number }
 
 /** Starts a Stripe Checkout for the adoption of up to five CAPs. */
 export function AdoptForm({ defaultCompany, plans }: { defaultCompany: string; plans: PlanOption[] }) {
   const [company, setCompany] = useState(defaultCompany)
   const [caps, setCaps] = useState<string[]>([])
-  const [plan, setPlan] = useState<PlanOption['key']>('trimestrale')
+  const [plan, setPlan] = useState<PlanOption['key']>('giornata')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -52,8 +53,8 @@ export function AdoptForm({ defaultCompany, plans }: { defaultCompany: string; p
 
   return (
     <SectionCard
-      title='Adotta una zona'
-      info='L’importo va al fondo dell’associazione partner: rimborsi spese dei volontari e materiali nelle zone adottate.'
+      title='Adotta una zona o porta il tuo team'
+      info='L’importo va all’associazione partner: coordinamento, assicurazione e materiali dei volontari nelle zone scelte.'
     >
       <form onSubmit={onSubmit} className='space-y-4'>
         <FormGrid>
@@ -75,10 +76,11 @@ export function AdoptForm({ defaultCompany, plans }: { defaultCompany: string; p
               cerca='Cerca CAP'
             />
           </PropertyField>
-          <PropertyField label='Piano'>
+          <PropertyField label='Piano' span>
             <ToggleGroup
               type='single'
-              variant='segmented'
+              variant='outline'
+              className='flex w-full flex-wrap justify-start'
               value={plan}
               onValueChange={value => {
                 if (value) setPlan(value as PlanOption['key'])
@@ -95,7 +97,7 @@ export function AdoptForm({ defaultCompany, plans }: { defaultCompany: string; p
         {error && <Avviso tono='destructive'>{error}</Avviso>}
         <div className='flex justify-end'>
           <Button type='submit' variant='outline' disabled={pending}>
-            {pending && <Spinner />} Adotta e paga
+            {pending && <Spinner />} Procedi al pagamento
           </Button>
         </div>
       </form>

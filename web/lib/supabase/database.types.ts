@@ -264,6 +264,8 @@ export type Database = {
           verified_by: string | null
           volunteer_id: string | null
           volunteer_note: string | null
+          team_size: number
+          sponsorship_id: string | null
         }
         Insert: {
           created_at?: string
@@ -286,6 +288,8 @@ export type Database = {
           verified_by?: string | null
           volunteer_id?: string | null
           volunteer_note?: string | null
+          team_size?: number
+          sponsorship_id?: string | null
         }
         Update: {
           created_at?: string
@@ -308,6 +312,8 @@ export type Database = {
           verified_by?: string | null
           volunteer_id?: string | null
           volunteer_note?: string | null
+          team_size?: number
+          sponsorship_id?: string | null
         }
         Relationships: [
           {
@@ -456,6 +462,7 @@ export type Database = {
           starts_on: string | null
           status: Database['public']['Enums']['sponsorship_status']
           stripe_session_id: string | null
+          volunteer_days: number
           updated_at: string
         }
         Insert: {
@@ -470,6 +477,7 @@ export type Database = {
           starts_on?: string | null
           status?: Database['public']['Enums']['sponsorship_status']
           stripe_session_id?: string | null
+          volunteer_days?: number
           updated_at?: string
         }
         Update: {
@@ -484,6 +492,7 @@ export type Database = {
           starts_on?: string | null
           status?: Database['public']['Enums']['sponsorship_status']
           stripe_session_id?: string | null
+          volunteer_days?: number
           updated_at?: string
         }
         Relationships: [

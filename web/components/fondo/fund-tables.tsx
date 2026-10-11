@@ -16,6 +16,7 @@ import {
   SPONSORSHIP_STATUS_LABEL,
   SPONSORSHIP_STATUS_TONE,
 } from '@/lib/fondo/types'
+import { planShort } from '@/lib/payments/plans'
 
 const DONATION_COLUMNS: ColumnDef<Donation>[] = [
   {
@@ -111,7 +112,7 @@ const SPONSORSHIP_COLUMNS: ColumnDef<Sponsorship>[] = [
     id: 'plan',
     accessorKey: 'plan',
     header: 'Piano',
-    cell: ({ row }) => (row.original.plan === 'annuale' ? 'Annuale' : 'Trimestrale'),
+    cell: ({ row }) => planShort(row.original.plan),
   },
   {
     id: 'amount',

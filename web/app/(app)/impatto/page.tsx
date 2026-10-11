@@ -12,7 +12,7 @@ import { firstParam, type SearchParams } from '@/lib/search-params'
 
 const PLANS: PlanOption[] = (Object.keys(ADOPTION_PLANS) as PlanOption['key'][]).map(key => ({
   key,
-  label: ADOPTION_PLANS[key].label,
+  label: ADOPTION_PLANS[key].short,
   amount: ADOPTION_PLANS[key].amount,
 }))
 

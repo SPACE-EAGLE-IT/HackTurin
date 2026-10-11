@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 
 import { CAPS } from '@/lib/civic/cap'
-import { ADOPTION_PLANS, PARTNER_ETS, paymentsConfigured, stripe } from '@/lib/payments/stripe'
+import {
+  ADOPTION_PLANS,
+  type AdoptionPlan,
+  PARTNER_ETS,
+  paymentsConfigured,
+  stripe,
+} from '@/lib/payments/stripe'
 import { createClient } from '@/lib/supabase/server'
 
 const donation = z.object({
@@ -17,7 +23,7 @@ const sponsorship = z.object({
     .array(z.enum(CAPS as [string, ...string[]]))
     .min(1)
     .max(5),
-  plan: z.enum(['trimestrale', 'annuale']),
+  plan: z.enum(Object.keys(ADOPTION_PLANS) as [AdoptionPlan, ...AdoptionPlan[]]),
 })
 
 /** Starts a Stripe Checkout: a donation (anyone) or a zone adoption (a signed-in company). */
@@ -41,7 +47,7 @@ export async function POST(req: Request) {
             unit_amount: d.data.amount * 100,
             product_data: {
               name: `Donazione a ${PARTNER_ETS}`,
-              description: 'Fondo volontari TorinoSegnala',
+              description: 'Fondo volontari To.Be',
             },
           },
         },
@@ -72,7 +78,7 @@ export async function POST(req: Request) {
           currency: 'eur',
           unit_amount: plan.amount * 100,
           product_data: {
-            name: `Adozione zone ${s.data.caps.join(', ')} · ${plan.label}`,
+            name: `${plan.label} · CAP ${s.data.caps.join(', ')}`,
             description: s.data.company,
           },
         },

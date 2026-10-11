@@ -1,11 +1,18 @@
 import type { StatusTone } from '@/components/ds/status-badge'
 import type { Json, Tables } from '@/lib/supabase/database.types'
 
-export const DEVICE_TYPES = ['fixed', 'mobile'] as const
+export const DEVICE_TYPES = ['fixed', 'mobile', 'phone'] as const
 export type DeviceType = (typeof DEVICE_TYPES)[number]
 
-export const DEVICE_TYPE_LABEL: Record<string, string> = { fixed: 'Fisso', mobile: 'Mobile' }
+export const DEVICE_TYPE_LABEL: Record<string, string> = {
+  fixed: 'Fisso',
+  mobile: 'Mobile',
+  phone: 'Telefono',
+}
 export const deviceTypeLabel = (type: string) => DEVICE_TYPE_LABEL[type] ?? type
+
+/** Mobile and phone PODs travel: their label is a vehicle, not a place. */
+export const isMovingType = (type: string) => type === 'mobile' || type === 'phone'
 
 /** A POD counts as online when it was heard from within this window. */
 export const ONLINE_WINDOW_MS = 15 * 60 * 1000

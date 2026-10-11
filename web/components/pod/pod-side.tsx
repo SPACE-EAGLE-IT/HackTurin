@@ -14,7 +14,7 @@ import { StatusBadge } from '@/components/ds/status-badge'
 import { Button } from '@/components/ui/button'
 import { numeroIt } from '@/lib/format-number'
 import { revokeKey } from '@/lib/pod/actions'
-import { deviceTypeLabel, type PodDetail, type PodKey } from '@/lib/pod/types'
+import { deviceTypeLabel, isMovingType, type PodDetail, type PodKey } from '@/lib/pod/types'
 
 /** The facts of a POD: type, last contact, battery, firmware, position. */
 export function PodFacts({ device }: { device: PodDetail }) {
@@ -23,7 +23,7 @@ export function PodFacts({ device }: { device: PodDetail }) {
   return (
     <PannelloScheda occhiello='Scheda'>
       <RigaDettaglio label='Tipo'>{deviceTypeLabel(device.type)}</RigaDettaglio>
-      <RigaDettaglio label={device.type === 'mobile' ? 'Mezzo' : 'Posizione'}>
+      <RigaDettaglio label={isMovingType(device.type) ? 'Mezzo' : 'Posizione'}>
         {device.label ?? '—'}
       </RigaDettaglio>
       <RigaDettaglio label='Ultimo contatto'>

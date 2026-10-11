@@ -1,13 +1,21 @@
 'use client'
 
 import { KpiCard, KpiGrid } from '@/components/ds/kpi-card'
-import { euro, MONTHLY_CAP, type MissionKpis as Values, type MissionTab } from '@/lib/missioni/types'
+import { numeroIt } from '@/lib/format-number'
+import {
+  euro,
+  MONTHLY_CAP,
+  type MissionKpis as Values,
+  type MissionTab,
+  volunteerLevel,
+} from '@/lib/missioni/types'
 import { useUrlState } from '@/lib/url-state'
 
 /** The four numbers above the list; the mission tiles switch the tab below. */
 export function MissionKpis({ kpis, tab }: { kpis: Values; tab: MissionTab }) {
   const { set } = useUrlState()
   const left = Math.max(0, MONTHLY_CAP - kpis.monthSelfCertified)
+  const level = volunteerLevel(kpis.mineHours)
 
   return (
     <KpiGrid count={4}>
@@ -25,9 +33,15 @@ export function MissionKpis({ kpis, tab }: { kpis: Values; tab: MissionTab }) {
         active={tab === 'mie'}
       />
       <KpiCard
-        title='Completate'
-        value={kpis.mineVerified}
+        title='Ore verificate'
+        display={numeroIt(kpis.mineHours)}
+        suffix='h'
         tone='success'
+        hint={
+          level.next
+            ? `${level.label} · ${numeroIt(level.next.hoursLeft)} h a «${level.next.label}»`
+            : level.label
+        }
         onClick={() => set('tab', 'mie')}
       />
       <KpiCard

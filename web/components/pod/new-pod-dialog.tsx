@@ -19,6 +19,12 @@ const FORM_ID = 'new-pod'
 const TYPE_OPTIONS = DEVICE_TYPES.map(type => ({ value: type, label: deviceTypeLabel(type) }))
 
 type Draft = { name: string; type: DeviceType; label: string; keyLabel: string }
+const PLACEHOLDER: Record<DeviceType, string> = {
+  fixed: 'Corso Vittorio Emanuele II',
+  mobile: 'Bus linea 4',
+  phone: 'Camion AMIAT 12',
+}
+
 const EMPTY: Draft = { name: '', type: 'fixed', label: '', keyLabel: '' }
 
 export function NewPodButton() {
@@ -27,6 +33,7 @@ export function NewPodButton() {
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [apiKey, setApiKey] = useState<string | null>(null)
+  const [createdType, setCreatedType] = useState<DeviceType>('fixed')
   const [pending, startTransition] = useTransition()
 
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) =>
@@ -42,6 +49,7 @@ export function NewPodButton() {
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    const type = draft.type
     startTransition(async () => {
       const result = await createDevice(draft)
       if (!result.ok) {
@@ -51,6 +59,7 @@ export function NewPodButton() {
       }
       toast.success('POD creato')
       onOpenChange(false)
+      setCreatedType(type)
       setApiKey(result.data.apiKey)
       router.refresh()
     })
@@ -93,7 +102,7 @@ export function NewPodButton() {
               <Input
                 value={draft.label}
                 onChange={event => update('label', event.target.value)}
-                placeholder={draft.type === 'mobile' ? 'Bus linea 4' : 'Corso Vittorio Emanuele II'}
+                placeholder={PLACEHOLDER[draft.type]}
                 maxLength={160}
               />
               <FieldError message={errors.label} />
@@ -113,7 +122,7 @@ export function NewPodButton() {
           </FormGrid>
         </form>
       </DialogoAzione>
-      <KeyRevealDialog apiKey={apiKey} onClose={() => setApiKey(null)} />
+      <KeyRevealDialog apiKey={apiKey} deviceType={createdType} onClose={() => setApiKey(null)} />
     </>
   )
 }

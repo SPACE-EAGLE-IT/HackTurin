@@ -166,14 +166,12 @@ export function ReportMap({
       m.on('click', 'clusters', e => {
         const f = m.queryRenderedFeatures(e.point, { layers: ['clusters'] })[0]
         const src = m.getSource('reports') as maplibregl.GeoJSONSource
-        src
-          .getClusterExpansionZoom(Number(f.properties?.cluster_id))
-          .then(z =>
-            m.easeTo({
-              center: (f.geometry as unknown as { coordinates: [number, number] }).coordinates,
-              zoom: z + 0.3,
-            })
-          )
+        src.getClusterExpansionZoom(Number(f.properties?.cluster_id)).then(z =>
+          m.easeTo({
+            center: (f.geometry as unknown as { coordinates: [number, number] }).coordinates,
+            zoom: z + 0.3,
+          })
+        )
       })
       m.on('click', 'points', e => {
         const id = e.features?.[0]?.properties?.id
@@ -227,7 +225,7 @@ export function ReportMap({
     const deviceMarkers = devices.map(d => {
       const dot = document.createElement('div')
       dot.className = `size-3.5 rounded-full ring-2 ring-background ${d.online ? 'bg-success' : 'bg-muted-foreground'}`
-      const kind = d.type === 'mobile' ? 'POD mobile' : 'POD fisso'
+      const kind = d.type === 'phone' ? 'POD telefono' : d.type === 'mobile' ? 'POD mobile' : 'POD fisso'
       return new maplibregl.Marker({ element: dot })
         .setLngLat([d.lon, d.lat])
         .setPopup(
@@ -249,7 +247,7 @@ export function ReportMap({
       label.textContent = pm != null ? `PM2.5 ${Math.round(pm)}` : t != null ? `${t.toFixed(1)}°` : '•'
       pill.append(dot, label)
       const lines = Object.entries(st.values).map(([k, v]) => `${metricLabel(k)}: ${v} ${metricUnit(k)}`)
-      lines.unshift(st.source === 'pod' ? 'POD TorinoSegnala' : 'Sensor.Community')
+      lines.unshift(st.source === 'pod' ? 'POD To.Be' : 'Sensor.Community')
       return new maplibregl.Marker({ element: pill })
         .setLngLat([st.lon, st.lat])
         .setPopup(
@@ -260,5 +258,11 @@ export function ReportMap({
     markers.current = [...deviceMarkers, ...stationMarkers]
   }, [devices, stations, ready])
 
-  return <div ref={el} className={className} />
+  // MapLibre's stylesheet forces `position: relative` on its container, which beats Tailwind's
+  // layered utilities: the caller's sizing goes on a wrapper and the map just fills it.
+  return (
+    <div className={className}>
+      <div ref={el} className='size-full' />
+    </div>
+  )
 }

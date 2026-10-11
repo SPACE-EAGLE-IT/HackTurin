@@ -26,6 +26,9 @@ export function MissionFacts({ mission }: { mission: MissionDetail }) {
           {mission.due_date ? <Data valore={mission.due_date} forma='corta' /> : '—'}
         </RigaDettaglio>
         <RigaDettaglio label='Volontario'>{mission.volunteer?.full_name ?? 'Nessuno'}</RigaDettaglio>
+        {mission.company && (
+          <RigaDettaglio label='Squadra aziendale'>{`${mission.company} · ${mission.team_size} persone`}</RigaDettaglio>
+        )}
         <RigaDettaglio label='Inviata'>
           {mission.submitted_at ? <Data valore={mission.submitted_at} forma='corta' /> : '—'}
         </RigaDettaglio>
@@ -61,7 +64,11 @@ export function MissionOutcome({ mission }: { mission: MissionDetail }) {
             )}
             <PannelloScheda occhiello='Attività'>
               <RigaDettaglio label='Ore'>
-                {mission.hours !== null ? `${numeroIt(Number(mission.hours))} h` : '—'}
+                {mission.hours === null
+                  ? '—'
+                  : mission.team_size > 1
+                    ? `${numeroIt(Number(mission.hours))} h a persona · ${numeroIt(Number(mission.hours) * mission.team_size)} ore-persona`
+                    : `${numeroIt(Number(mission.hours))} h`}
               </RigaDettaglio>
               <RigaDettaglio label='Kg raccolti'>
                 {mission.kg_collected !== null ? `${numeroIt(Number(mission.kg_collected))} kg` : '—'}

@@ -1,9 +1,13 @@
+import Link from 'next/link'
+import { SmartphoneIcon } from 'lucide-react'
+
 import PageHeader from '@/components/ds/page-header'
 import { ListSurface } from '@/components/list-surface'
 import { NewPodButton } from '@/components/pod/new-pod-dialog'
 import { PodKpis } from '@/components/pod/pod-kpis'
 import { PodLog } from '@/components/pod/pod-log'
 import { PodTable } from '@/components/pod/pod-table'
+import { Button } from '@/components/ui/button'
 import { requirePageAccess } from '@/lib/access/guard'
 import { can } from '@/lib/access/queries'
 import { getPodTraffic, listDevices, listLogs } from '@/lib/pod/queries'
@@ -35,7 +39,17 @@ export default async function PodPage(props: { searchParams: Promise<SearchParam
       <PageHeader
         title='POD'
         description='Sensori su mezzi e semafori: connessione, traffico API, chiavi.'
-        actions={canWrite ? <NewPodButton /> : undefined}
+        actions={
+          <>
+            {/* The phone page explains the pairing: Nuovo POD → tipo Telefono → scan the QR. */}
+            <Button asChild variant='ghost'>
+              <Link href='/pod-telefono' target='_blank'>
+                <SmartphoneIcon /> Usa un telefono come POD
+              </Link>
+            </Button>
+            {canWrite && <NewPodButton />}
+          </>
+        }
       />
       <PodKpis traffic={traffic} />
       <ListSurface toolbar={<p className='text-muted-foreground text-sm'>{devices.length} POD</p>}>

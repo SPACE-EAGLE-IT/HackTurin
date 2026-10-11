@@ -57,8 +57,10 @@ export type PersonRef = { id: string; full_name: string; avatar_url: string | nu
 /** What a list row shows: the mission plus the CAP and category of its report. */
 export type MissionListItem = Pick<
   MissionRow,
-  'id' | 'title' | 'status' | 'due_date' | 'volunteer_id' | 'submitted_at' | 'created_at'
+  'id' | 'title' | 'status' | 'due_date' | 'volunteer_id' | 'submitted_at' | 'created_at' | 'team_size'
 > & {
+  /** Company whose team does the mission (corporate volunteering), if any. */
+  company: string | null
   cap: string | null
   category: string | null
   volunteer: PersonRef | null
@@ -70,6 +72,7 @@ export type MissionExpense = Pick<
 >
 
 export type MissionDetail = MissionRow & {
+  company: string | null
   cap: string | null
   category: string | null
   reportStatus: string | null
@@ -84,6 +87,8 @@ export type MissionKpis = {
   open: number
   mineInProgress: number
   mineVerified: number
+  /** Own verified hours: what the certificate and the level count. */
+  mineHours: number
   /** Own expenses this month (all kinds). */
   monthExpenses: number
   /** Own self-certified expenses this month, against MONTHLY_CAP. */
@@ -113,3 +118,35 @@ export const isEnrolled = (profile: Pick<VolunteerProfile, 'ets_member_at' | 'in
 
 export const euro = (n: number) =>
   n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2 })
+
+/** Recognition without money: levels by verified hours, shown to the volunteer and on the certificate. */
+export const VOLUNTEER_LEVELS = [
+  { min: 0, label: 'Nuovo volontario' },
+  { min: 4, label: 'Volontario attivo' },
+  { min: 20, label: 'Custode di quartiere' },
+  { min: 50, label: 'Ambasciatore di Torino' },
+] as const
+
+export function volunteerLevel(hours: number) {
+  let index = 0
+  VOLUNTEER_LEVELS.forEach((level, i) => {
+    if (hours >= level.min) index = i
+  })
+  const next = VOLUNTEER_LEVELS[index + 1]
+  return {
+    label: VOLUNTEER_LEVELS[index].label,
+    next: next ? { label: next.label, hoursLeft: Math.round((next.min - hours) * 10) / 10 } : null,
+  }
+}
+
+/** A verified mission as listed on the hours certificate. */
+export type CertificateRow = {
+  id: string
+  title: string
+  verified_at: string
+  hours: number
+  cap: string | null
+}
+
+/** Active company plan that can be linked to a team mission. */
+export type TeamOption = { id: string; company: string; daysLeft: number }

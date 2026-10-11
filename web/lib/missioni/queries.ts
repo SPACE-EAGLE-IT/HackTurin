@@ -4,6 +4,7 @@ import { todayKey } from '@/lib/date-keys'
 import { createClient } from '@/lib/supabase/server'
 
 import type {
+  CertificateRow,
   ExpenseUsage,
   MissionDetail,
   MissionExpense,
@@ -12,12 +13,16 @@ import type {
   MissionRow,
   MissionTab,
   PersonRef,
+  TeamOption,
   VolunteerProfile,
 } from './types'
 
 const PERSON = 'id, full_name, avatar_url'
 const REPORT = 'id, category, cap, geom, status'
-const LIST_COLUMNS = `id, title, status, due_date, volunteer_id, submitted_at, created_at, report:reports(${REPORT}), volunteer:profiles!missions_volunteer_id_fkey(${PERSON})`
+const SPONSOR = 'sponsorship:sponsorships(company_name)'
+const LIST_COLUMNS = `id, title, status, due_date, volunteer_id, submitted_at, created_at, team_size, ${SPONSOR}, report:reports(${REPORT}), volunteer:profiles!missions_volunteer_id_fkey(${PERSON})`
+
+type SponsorRef = { company_name: string } | null
 
 type ReportRef = { id: string; category: string; cap: string | null; geom: unknown; status: string }
 
@@ -29,10 +34,18 @@ export function reportCap(report: Pick<ReportRef, 'cap' | 'geom'> | null): strin
   return point ? capFor(point.lon, point.lat) : null
 }
 
-type ListRow = Omit<MissionListItem, 'cap' | 'category'> & { report: ReportRef | null }
+type ListRow = Omit<MissionListItem, 'cap' | 'category' | 'company'> & {
+  report: ReportRef | null
+  sponsorship: SponsorRef
+}
 
-function toListItem({ report, ...row }: ListRow): MissionListItem {
-  return { ...row, cap: reportCap(report), category: report?.category ?? null }
+function toListItem({ report, sponsorship, ...row }: ListRow): MissionListItem {
+  return {
+    ...row,
+    company: sponsorship?.company_name ?? null,
+    cap: reportCap(report),
+    category: report?.category ?? null,
+  }
 }
 
 export async function getVolunteerProfile(profileId: string): Promise<VolunteerProfile | null> {
@@ -69,11 +82,13 @@ export async function getMission(id: string): Promise<MissionDetail | null> {
   const [mission, expenses] = await Promise.all([
     supabase
       .from('missions')
-      .select(`*, report:reports(${REPORT}), volunteer:profiles!missions_volunteer_id_fkey(${PERSON})`)
+      .select(
+        `*, ${SPONSOR}, report:reports(${REPORT}), volunteer:profiles!missions_volunteer_id_fkey(${PERSON})`
+      )
       .eq('id', id)
       .maybeSingle()
       .overrideTypes<
-        MissionRow & { report: ReportRef | null; volunteer: PersonRef | null },
+        MissionRow & { report: ReportRef | null; volunteer: PersonRef | null; sponsorship: SponsorRef },
         { merge: false }
       >(),
     supabase
@@ -86,9 +101,10 @@ export async function getMission(id: string): Promise<MissionDetail | null> {
   if (mission.error) throw mission.error
   if (expenses.error) throw expenses.error
   if (!mission.data) return null
-  const { report, ...row } = mission.data
+  const { report, sponsorship, ...row } = mission.data
   return {
     ...row,
+    company: sponsorship?.company_name ?? null,
     cap: reportCap(report),
     category: report?.category ?? null,
     reportStatus: report?.status ?? null,
@@ -120,7 +136,7 @@ export async function getMissionKpis(profileId: string): Promise<MissionKpis> {
       .select('id', { count: 'exact', head: true })
       .eq('status', 'open')
       .is('volunteer_id', null),
-    supabase.from('missions').select('status').eq('volunteer_id', profileId),
+    supabase.from('missions').select('status, hours').eq('volunteer_id', profileId),
     supabase
       .from('volunteer_expenses')
       .select('amount, self_certified')
@@ -141,7 +157,69 @@ export async function getMissionKpis(profileId: string): Promise<MissionKpis> {
     open: open.count ?? 0,
     mineInProgress: mine.data.filter(row => row.status === 'assigned' || row.status === 'submitted').length,
     mineVerified: mine.data.filter(row => row.status === 'verified').length,
+    mineHours:
+      Math.round(
+        mine.data
+          .filter(row => row.status === 'verified')
+          .reduce((sum, row) => sum + Number(row.hours ?? 0), 0) * 10
+      ) / 10,
     monthExpenses: Math.round(monthExpenses * 100) / 100,
     monthSelfCertified: Math.round(monthSelfCertified * 100) / 100,
   }
+}
+
+/** Verified missions of one volunteer, oldest first: the rows of the hours certificate. */
+export async function listCertificate(profileId: string): Promise<CertificateRow[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('missions')
+    .select(`id, title, verified_at, hours, report:reports(${REPORT})`)
+    .eq('volunteer_id', profileId)
+    .eq('status', 'verified')
+    .order('verified_at', { ascending: true })
+    .overrideTypes<
+      {
+        id: string
+        title: string
+        verified_at: string | null
+        hours: number | null
+        report: ReportRef | null
+      }[],
+      { merge: false }
+    >()
+  if (error) throw error
+  return data.map(row => ({
+    id: row.id,
+    title: row.title,
+    verified_at: row.verified_at ?? '',
+    hours: Number(row.hours ?? 0),
+    cap: reportCap(row.report),
+  }))
+}
+
+/** Active company plans with volunteering days still to use (readable with `fondo` read). */
+export async function listTeamOptions(): Promise<TeamOption[]> {
+  const supabase = await createClient()
+  const [plans, used] = await Promise.all([
+    supabase
+      .from('sponsorships')
+      .select('id, company_name, volunteer_days')
+      .eq('status', 'active')
+      .gt('volunteer_days', 0)
+      .order('company_name'),
+    supabase
+      .from('missions')
+      .select('sponsorship_id')
+      .not('sponsorship_id', 'is', null)
+      .neq('status', 'rejected'),
+  ])
+  if (plans.error || used.error) return []
+  const count = new Map<string, number>()
+  for (const m of used.data)
+    if (m.sponsorship_id) count.set(m.sponsorship_id, (count.get(m.sponsorship_id) ?? 0) + 1)
+  return plans.data.map(p => ({
+    id: p.id,
+    company: p.company_name,
+    daysLeft: Math.max(0, p.volunteer_days - (count.get(p.id) ?? 0)),
+  }))
 }

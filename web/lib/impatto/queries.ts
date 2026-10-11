@@ -21,7 +21,15 @@ export type ImpactReport = {
     medianResolutionDays: number | null
     byCategory: { category: string; count: number }[]
   }
-  missions: { verified: number; hours: number; kg: number; readable: boolean }
+  /** Hours are person-hours (hours × team size); team days are the company's own volunteering days. */
+  missions: {
+    verified: number
+    hours: number
+    kg: number
+    teamDays: number
+    people: number
+    readable: boolean
+  }
   air: { pods: number; pm25: number | null; pm10: number | null; no2: number | null }
 }
 
@@ -88,13 +96,15 @@ export async function getImpactReport(sponsorship: Sponsorship, window: ImpactWi
     anon.rpc('public_pod_readings'),
     supabase
       .from('missions')
-      .select('verified_at, hours, kg_collected, report:reports(cap, geom)')
+      .select('verified_at, hours, kg_collected, team_size, sponsorship_id, report:reports(cap, geom)')
       .eq('status', 'verified')
       .overrideTypes<
         {
           verified_at: string | null
           hours: number | null
           kg_collected: number | null
+          team_size: number
+          sponsorship_id: string | null
           report: { cap: string | null; geom: unknown } | null
         }[],
         { merge: false }
@@ -117,14 +127,21 @@ export async function getImpactReport(sponsorship: Sponsorship, window: ImpactWi
   let verified = 0
   let hours = 0
   let kg = 0
+  let teamDays = 0
+  let people = 0
   for (const m of missionsRes.data ?? []) {
-    if (!m.report || !inWindow(m.verified_at, from, to)) continue
-    const point = parsePoint(typeof m.report.geom === 'string' ? m.report.geom : null)
-    const cap = m.report.cap ?? (point ? capFor(point.lon, point.lat) : null)
-    if (!cap || !caps.has(cap)) continue
+    if (!inWindow(m.verified_at, from, to)) continue
+    const ownTeam = m.sponsorship_id === sponsorship.id
+    const point = parsePoint(typeof m.report?.geom === 'string' ? m.report.geom : null)
+    const cap = m.report?.cap ?? (point ? capFor(point.lon, point.lat) : null)
+    if (!ownTeam && (!cap || !caps.has(cap))) continue
     verified++
-    hours += Number(m.hours ?? 0)
+    hours += Number(m.hours ?? 0) * (m.team_size ?? 1)
     kg += Number(m.kg_collected ?? 0)
+    if (ownTeam) {
+      teamDays++
+      people += m.team_size ?? 1
+    }
   }
 
   // Air: latest reading of every POD inside the adopted CAPs (last three hours).
@@ -156,6 +173,8 @@ export async function getImpactReport(sponsorship: Sponsorship, window: ImpactWi
       verified,
       hours: Math.round(hours * 10) / 10,
       kg: Math.round(kg * 10) / 10,
+      teamDays,
+      people,
       readable: !missionsRes.error,
     },
     air: { pods: pods.length, pm25: metric('pm25_ugm3'), pm10: metric('pm10_ugm3'), no2: metric('no2_ugm3') },

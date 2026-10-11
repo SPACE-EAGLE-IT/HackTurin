@@ -1,0 +1,66 @@
+# Handoff — To.Be · un nuovo modo di vivere la città
+
+Stato al 11/10/2026. App in `web/` (kit IAMAimpresa + moduli To.Be), Supabase `zikhbchvfxivltrpggqf`,
+Vercel progetto `torinosegnala` → https://torinosegnala.vercel.app. Repo privato (licenza del kit: solo uso evento).
+
+Avvio locale: `cd web && nvm use 22 && pnpm dev`. Controlli: `pnpm check`, `pnpm lint`, `pnpm test` (61 verdi), `pnpm build`.
+
+## Cosa funziona
+
+| Area | Dove | Note |
+|---|---|---|
+| Mappa pubblica, segnala con GPS automatico | `/`, `/segnala` | precisione GPS, indirizzo (Nominatim), segnaposto trascinabile |
+| Assistente cittadini (Claude Haiku) | pulsante «Chiedi» nell'intestazione | strumenti in sola lettura; la segnalazione la invia il cittadino. Si attiva con la chiave Anthropic |
+| Assistente amministrazione (Claude Sonnet) | `/assistant` | `AI_PROVIDER/AI_MODEL/AI_API_KEY` da env |
+| POD da telefono | `/pod-telefono` | collegamento via QR dalla Console POD; buche da accelerometro, rumore, segnalazioni rapide, «Simula buca» |
+| API POD hardware | `docs/POD_API.md` | contratto invariato |
+| Area Comune | Segnalazioni, Interventi + Percorsi, Appalti, POD, Help desk, Missioni, Fondo, Impatto, Accessi | permessi del kit; il primo account è admin |
+| Volontari | `/volontari`, `/missioni`, `/missioni/attestato` | Space Eagle ETS; livelli, attestato ore, squadre aziendali, rimborsi entro 10 €/g e 150 €/mese |
+| Aziende | `/aziende`, `/impatto` | giornata di volontariato 1.500 €, adozione 900 €/3 mesi, 3.500 €/anno con 2 giornate (Stripe) |
+| Satellite (API) | `/api/public/satellite` | Sentinel-2 L2A (Earth Search, senza chiavi): AOT e NDVI per CAP |
+| Numero verde (backend) | `/api/voice/report`, `/api/voice/zone`, `scripts/voice/setup-elevenlabs.mjs`, `docs/VOICE.md` | webhook protetti da `VOICE_TOOL_SECRET`; blocco «Preferisci parlare?» su `/segnala` |
+
+## Da finire (lavori interrotti dal limite di sessione)
+
+1. **Satellite, interfaccia**: manca la sezione su `/statistiche` e il livello «Satellite» sulla mappa. L'API c'è già.
+   Limite noto: nella scena del 05/10/2026 l'AOT di Sen2Cor è quasi costante sulla città (0,139), quindi le fasce
+   risultano tutte «media». L'NDVI invece distingue bene le zone. Presentarlo come *stima*, con
+   l'attribuzione «Contiene dati Copernicus Sentinel modificati 2026». Per l'NO₂ valutare Sentinel-5P (~5 km).
+2. **PDF del report di sostenibilità**: la ricerca di conformità è in `docs/VSME_COMPLIANCE.md` (VSME, Omnibus,
+   Direttiva 2024/825), con mappatura e dichiarazioni obbligatorie. **Non ancora fatti**:
+   - la route `app/api/impatto/[id]/pdf` con `@react-pdf/renderer` (la dipendenza è già installata);
+   - l'anteprima con iframe e il riquadro «Conformità VSME» nella pagina del report.
+3. **Numero verde**: si attiva quando ci sono le chiavi (vedi sotto). Il codice non è ancora stato provato con un agente
+   ElevenLabs reale.
+4. Verifica a vista delle pagine riservate da loggati (desktop 1440 e mobile 390, tema chiaro e scuro).
+
+## Chiavi: le inserisce una persona del team, non l'assistente AI
+
+| Variabile | Dove | Per cosa |
+|---|---|---|
+| `AI_API_KEY` | `web/.env.local` + Vercel (Secret) | Claude per entrambi gli assistenti. Deve essere una chiave API Anthropic (`sk-ant-api…`, da console.anthropic.com) |
+| `ELEVENLABS_API_KEY` | solo `.env.local` | script di creazione dell'agente vocale |
+| `VOICE_TOOL_SECRET` | `.env.local` + Vercel | `openssl rand -hex 32` |
+| `NEXT_PUBLIC_ELEVENLABS_AGENT_ID`, `NEXT_PUBLIC_VOICE_NUMBER` | `.env.local` + Vercel | stampati dallo script / numero Twilio |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `PAYMENT_BRIDGE_SECRET` | `.env.local` + Vercel | pagamenti; il bridge è il segreto Vault `ts_payment_bridge` |
+
+Comando per Vercel (da `web/`): `vercel env add NOME production`, poi `vercel deploy --prod`.
+
+## Sicurezza: da fare subito
+
+- **La chiave Anthropic incollata in chat va revocata** su console.anthropic.com e sostituita: ormai è nel
+  registro della conversazione.
+- Su Vercel ci sono ancora `SUPABASE_SERVICE_ROLE_KEY` e `ADMIN_PASSWORD` della vecchia versione. L'app non le usa più:
+  conviene rimuoverle (`vercel env rm SUPABASE_SERVICE_ROLE_KEY production`).
+- La chiave di prova del POD hardware è nel kit del team POD: revocarla dalla Console POD a fine evento.
+
+## Dati demo
+
+- `node --env-file=.env.local scripts/demo/seed-business.mjs [--clear]`: appalti, interventi, missioni, donazioni,
+  un'adozione e una giornata di team.
+- `seed-reports.mjs` e `seed-telemetry.mjs`: rilanciare telemetria prima della demo, perché la mappa mostra solo le ultime 3 ore.
+
+## Migrazioni (già applicate su Supabase)
+
+`web/supabase/migrations/`: base e telemetria POD, le 3 del kit, `20261011090000_torinosegnala.sql`,
+`20261011120000_phone_pod_volunteering.sql` (tipo POD «phone», giornate di volontariato, squadre).

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 
 import { LoginForm } from '@/components/auth/login-form'
+import { BrandLockup } from '@/components/civic/brand'
 import { Card, CardContent } from '@/components/ui/card'
 import { firstParam, type SearchParams } from '@/lib/search-params'
 
@@ -17,22 +17,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <div className='w-full max-w-sm space-y-4'>
         <Card className='w-full'>
           <CardContent className='space-y-6'>
-            <Image
-              src='/brand/iamaimpresa-logo-esteso-nero-400.png'
-              alt='IAMAimpresa'
-              width={400}
-              height={29}
-              className='mx-auto h-6 w-auto dark:hidden'
-              priority
-            />
-            <Image
-              src='/brand/iamaimpresa-logo-esteso-bianco-400.png'
-              alt='IAMAimpresa'
-              width={400}
-              height={29}
-              className='mx-auto hidden h-6 w-auto dark:block'
-              priority
-            />
+            <div className='flex justify-center'>
+              <BrandLockup tagline />
+            </div>
             <LoginForm next={next} error={error} />
           </CardContent>
         </Card>

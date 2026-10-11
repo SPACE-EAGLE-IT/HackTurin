@@ -9,6 +9,7 @@ import { copiaNegliAppunti, CopiaValore } from '@/components/ds/copia-valore'
 import { DialogoAzione } from '@/components/ds/dialogo-azione'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { QrCode } from '@/components/pod/qr-code'
 
 const noop = () => () => {}
 const useOrigin = () =>
@@ -38,7 +39,9 @@ function snippets(origin: string, apiKey: string) {
     'print(r.status_code, r.json())',
   ].join('\n')
   const team = `${env}\n\nDocumentazione: docs/POD_API.md`
-  return { env, curl, python, team }
+  // The key travels in the fragment, which browsers never send to the server.
+  const phone = `${origin}/pod-telefono#k=${encodeURIComponent(apiKey)}`
+  return { env, curl, python, team, phone }
 }
 
 function Snippet({ testo, etichetta }: { testo: string; etichetta: string }) {
@@ -52,15 +55,40 @@ function Snippet({ testo, etichetta }: { testo: string; etichetta: string }) {
   )
 }
 
+/** Pairs a phone: scan the QR (or open the link) and the phone becomes this POD. */
+function PhonePairing({ link }: { link: string }) {
+  return (
+    <div className='flex flex-col items-center gap-3 sm:flex-row sm:items-start'>
+      <QrCode text={link} label='QR per collegare il telefono' className='max-w-56' />
+      <div className='min-w-0 flex-1 space-y-2 text-sm'>
+        <p>Inquadra il codice con la fotocamera del telefono: si apre la pagina del POD già collegata.</p>
+        <div className='flex items-center gap-2'>
+          <code className='bg-muted min-w-0 flex-1 truncate rounded-md px-3 py-2 font-mono text-xs'>
+            {link}
+          </code>
+          <CopiaValore testo={link} etichetta='link per il telefono' variant='outline' size='icon-sm' />
+        </div>
+        <p className='text-muted-foreground text-xs'>
+          La chiave è nel frammento del link (dopo #): resta sul telefono e non arriva ai log del server.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 /** Shows a freshly created API key once, with ready-made snippets for the hardware team. */
 export function KeyRevealDialog({
   apiKey,
+  deviceType,
   onClose,
 }: {
   /** The plain key; `null` closes the dialog. */
   apiKey: string | null
+  /** A phone POD opens on the QR pairing tab. */
+  deviceType?: string
   onClose: () => void
 }) {
+  const isPhone = deviceType === 'phone'
   const origin = useOrigin()
   const s = apiKey ? snippets(origin, apiKey) : null
 
@@ -94,12 +122,16 @@ export function KeyRevealDialog({
             </code>
             <CopiaValore testo={apiKey} etichetta='chiave API' variant='outline' size='icon-sm' />
           </div>
-          <Tabs defaultValue='env'>
+          <Tabs defaultValue={isPhone ? 'telefono' : 'env'}>
             <TabsList>
+              <TabsTrigger value='telefono'>Telefono</TabsTrigger>
               <TabsTrigger value='env'>.env</TabsTrigger>
               <TabsTrigger value='curl'>curl</TabsTrigger>
               <TabsTrigger value='python'>Python</TabsTrigger>
             </TabsList>
+            <TabsContent value='telefono'>
+              <PhonePairing link={s.phone} />
+            </TabsContent>
             <TabsContent value='env'>
               <Snippet testo={s.env} etichetta='file .env' />
             </TabsContent>

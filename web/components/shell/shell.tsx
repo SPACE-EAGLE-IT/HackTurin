@@ -1,12 +1,12 @@
 'use client'
 
-import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import { AssistantButton } from '@/components/assistant/assistant-button'
 import { AssistantDisc } from '@/components/assistant/assistant-disc'
 import { AssistantDock, type AssistantPreview } from '@/components/assistant/assistant-dock'
+import { BRAND, BrandMark } from '@/components/civic/brand'
 import AppShell, { type AppShellCrumb, type AppShellNavItem } from '@/components/ds/app-shell'
 import { type AccessMap, hasLevel } from '@/lib/access/types'
 import { useAssistantPanel } from '@/lib/ai/panel-store'
@@ -67,28 +67,10 @@ export function Shell({
         )}
       >
         <AppShell
-          brand={
-            <Image
-              src='/brand/iamaimpresa-marchio-bianco-256.png'
-              alt='IAMAimpresa'
-              width={256}
-              height={203}
-              className='size-6 object-contain'
-              priority
-            />
-          }
-          logotipo={
-            <Image
-              src='/brand/iamaimpresa-logo-esteso-bianco-400.png'
-              alt='IAMAimpresa'
-              width={400}
-              height={29}
-              className='h-5 w-auto'
-              priority
-            />
-          }
+          brand={<BrandMark className='size-6' />}
+          logotipo={<span className='font-semibold tracking-tight'>{BRAND.name}</span>}
           nav={nav}
-          current={active?.title ?? 'IAMAimpresa'}
+          current={active?.title ?? BRAND.name}
           trail={trail}
           headerActions={
             <>

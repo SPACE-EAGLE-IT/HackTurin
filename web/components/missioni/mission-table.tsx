@@ -73,6 +73,7 @@ export function MissionTable({
             title={mission.title}
             meta={[
               mission.cap ? `CAP ${mission.cap}` : null,
+              mission.company ? `Team ${mission.company}` : null,
               mission.category ? categoryName(mission.category) : null,
               mission.due_date ? <Data key='due' valore={mission.due_date} forma='corta' /> : null,
             ]}
@@ -120,7 +121,14 @@ function buildColumns(
       id: 'title',
       accessorKey: 'title',
       header: 'Missione',
-      cell: ({ row }) => <span className='font-medium'>{row.original.title}</span>,
+      cell: ({ row }) => (
+        <span className='font-medium'>
+          {row.original.title}
+          {row.original.company && (
+            <span className='text-muted-foreground font-normal'>{` · Team ${row.original.company}`}</span>
+          )}
+        </span>
+      ),
     },
     {
       id: 'cap',

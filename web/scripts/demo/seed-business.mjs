@@ -104,15 +104,33 @@ await db.from('donations').insert(
     created_at: new Date(Date.now() - i * 2 * 864e5).toISOString(),
   }))
 )
-await db.from('sponsorships').insert({
-  company_name: 'Azienda Demo S.r.l.',
-  caps: ['10122', '10152'],
-  plan: 'trimestrale',
-  amount: 900,
-  status: 'active',
-  starts_on: new Date(Date.now() - 20 * 864e5).toISOString().slice(0, 10),
-  ends_on: new Date(Date.now() + 70 * 864e5).toISOString().slice(0, 10),
-  stripe_session_id: 'demo_spons_1',
+const { data: sponsorship } = await db
+  .from('sponsorships')
+  .insert({
+    company_name: 'Azienda Demo S.r.l.',
+    caps: ['10122', '10152'],
+    plan: 'annuale',
+    amount: 3500,
+    volunteer_days: 2,
+    status: 'active',
+    starts_on: new Date(Date.now() - 20 * 864e5).toISOString().slice(0, 10),
+    ends_on: new Date(Date.now() + 345 * 864e5).toISOString().slice(0, 10),
+    stripe_session_id: 'demo_spons_1',
+  })
+  .select('id')
+  .single()
+// One company team day already done and verified: it feeds the impact report and the public fund.
+await db.from('missions').insert({
+  title: `${TAG} Giornata di team: pulizia lungo Dora`,
+  description: 'Volontariato aziendale coordinato da Space Eagle ETS.',
+  status: 'verified',
+  sponsorship_id: sponsorship.id,
+  team_size: 12,
+  hours: 4,
+  kg_collected: 86,
+  volunteer_note: '12 colleghi, 18 sacchi, 2 ingombranti segnalati ad AMIAT.',
+  submitted_at: new Date(Date.now() - 6 * 864e5).toISOString(),
+  verified_at: new Date(Date.now() - 5 * 864e5).toISOString(),
 })
 console.log(
   `demo: ${projects.length} appalti, ${tasks.length} interventi, missioni, ${donors.length} donazioni, 1 adozione`

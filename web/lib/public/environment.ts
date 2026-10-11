@@ -112,7 +112,7 @@ async function podStations(): Promise<Station[]> {
 export const ENVIRONMENT_SOURCES = [
   { name: 'Open-Meteo / Copernicus CAMS', url: 'https://open-meteo.com' },
   { name: 'Sensor.Community', url: 'https://sensor.community' },
-  { name: 'POD TorinoSegnala', url: '' },
+  { name: 'POD To.Be', url: '' },
 ]
 
 /** City conditions plus every ground station: open citizen sensors and our PODs. */

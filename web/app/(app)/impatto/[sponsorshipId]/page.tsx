@@ -8,7 +8,7 @@ import { ImpactReport } from '@/components/impatto/impact-report'
 import { PrintButton, WindowToggle } from '@/components/impatto/report-controls'
 import { requirePageAccess } from '@/lib/access/guard'
 import { getImpactReport, getSponsorship, IMPACT_WINDOWS } from '@/lib/impatto/queries'
-import { PARTNER_ETS } from '@/lib/payments/stripe'
+import { PARTNER_ETS, planLabel } from '@/lib/payments/stripe'
 import { enumParam, type SearchParams } from '@/lib/search-params'
 import { uuidSchema } from '@/lib/validation'
 
@@ -37,7 +37,7 @@ export default async function ImpactReportPage(props: {
         badges={<SponsorshipStatusBadge status={sponsorship.status} />}
         meta={
           <span className='text-muted-foreground text-sm'>
-            Adozione {sponsorship.plan === 'annuale' ? 'annuale' : 'trimestrale'} a favore di {PARTNER_ETS}
+            {planLabel(sponsorship.plan)} a favore di {PARTNER_ETS}
           </span>
         }
         actions={<PrintButton />}

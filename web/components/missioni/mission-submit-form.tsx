@@ -24,8 +24,11 @@ export function MissionSubmitForm({
   kg: initialKg,
   note: initialNote,
   hasAfterPhoto,
+  team = false,
 }: {
   missionId: string
+  /** Company team mission: hours are per person. */
+  team?: boolean
   hours: number | null
   kg: number | null
   note: string | null
@@ -91,7 +94,7 @@ export function MissionSubmitForm({
             />
             <FieldError message={errors.photoAfter} />
           </PropertyField>
-          <PropertyField label='Ore'>
+          <PropertyField label={team ? 'Ore a persona' : 'Ore'}>
             <NumberField value={hours} onValueChange={setHours} decimals={1} unit='h' />
             <FieldError message={errors.hours} />
           </PropertyField>

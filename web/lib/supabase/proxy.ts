@@ -13,9 +13,11 @@ const PUBLIC_PATHS = [
   '/dona',
   '/aziende',
   '/volontari',
+  '/pod-telefono',
   '/api/v1',
   '/api/public',
   '/api/stripe',
+  '/api/voice',
 ]
 
 /**

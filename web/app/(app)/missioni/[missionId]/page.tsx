@@ -60,6 +60,7 @@ export default async function MissionPage(props: { params: Promise<{ missionId: 
               kg={mission.kg_collected !== null ? Number(mission.kg_collected) : null}
               note={mission.volunteer_note}
               hasAfterPhoto={Boolean(mission.photo_after_url)}
+              team={mission.team_size > 1}
             />
           )}
           <MissionExpenses

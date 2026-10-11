@@ -12,8 +12,10 @@ import { DEVICE_TYPES, deviceTypeLabel, POD_STATE_LABEL, podState } from './type
 
 const createPodSchema = z.object({
   name: z.string().trim().min(1).max(80).describe('Nome del POD, es. "Semaforo Porta Nuova"'),
-  type: z.enum(DEVICE_TYPES).describe('fixed = su semaforo/palo, mobile = su un mezzo GTT'),
-  label: z.string().trim().max(160).optional().describe('Posizione (fisso) o mezzo (mobile)'),
+  type: z
+    .enum(DEVICE_TYPES)
+    .describe('fixed = su semaforo/palo, mobile = su un mezzo GTT, phone = telefono su un mezzo o una bici'),
+  label: z.string().trim().max(160).optional().describe('Posizione (fisso) o mezzo (mobile, telefono)'),
 })
 
 const setActiveSchema = z.object({

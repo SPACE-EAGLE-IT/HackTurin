@@ -2,14 +2,9 @@ import Stripe from 'stripe'
 
 import { createAnonClient } from '@/lib/supabase/anon'
 
-/** Plans a company can buy to adopt zones (one-off payment for the period). */
-export const ADOPTION_PLANS = {
-  trimestrale: { label: 'Trimestrale', months: 3, amount: 900 },
-  annuale: { label: 'Annuale', months: 12, amount: 3000 },
-} as const
-export type AdoptionPlan = keyof typeof ADOPTION_PLANS
+export { ADOPTION_PLANS, type AdoptionPlan, planLabel, planShort } from './plans'
 
-export const PARTNER_ETS = process.env.PARTNER_ETS_NAME ?? 'Associazione partner (ETS)'
+export const PARTNER_ETS = process.env.PARTNER_ETS_NAME ?? 'Space Eagle ETS'
 
 export const paymentsConfigured = () =>
   Boolean(process.env.STRIPE_SECRET_KEY && process.env.PAYMENT_BRIDGE_SECRET)

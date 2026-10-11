@@ -10,18 +10,20 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: 'TorinoSegnala', template: '%s · TorinoSegnala' },
-  description: 'Segnalazioni urbane di Torino da cittadini e sensori, gestite dal Comune.',
-  applicationName: 'TorinoSegnala',
+  title: { default: 'To.Be · un nuovo modo di vivere la città', template: '%s · To.Be' },
+  description:
+    'To.Be, un nuovo modo di vivere la città: segnalazioni, sensori, volontari e dati ambientali di Torino.',
+  applicationName: 'To.Be',
   manifest: '/manifest.webmanifest',
   robots: { index: false, follow: false },
   openGraph: {
     type: 'website',
-    siteName: 'TorinoSegnala',
-    title: 'TorinoSegnala',
-    description: 'Segnalazioni urbane di Torino da cittadini e sensori, gestite dal Comune.',
+    siteName: 'To.Be',
+    title: 'To.Be · un nuovo modo di vivere la città',
+    description:
+      'To.Be, un nuovo modo di vivere la città: segnalazioni, sensori, volontari e dati ambientali di Torino.',
     locale: 'it_IT',
-    images: [{ url: '/brand/og-image-1200x630.png', width: 1200, height: 630, alt: 'IAMAimpresa' }],
+    images: [{ url: '/brand/og-image-1200x630.png', width: 1200, height: 630, alt: 'To.Be' }],
   },
   twitter: { card: 'summary_large_image' },
   icons: {

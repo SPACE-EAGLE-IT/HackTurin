@@ -44,7 +44,11 @@ export function ImpactReport({ report, caps }: { report: Report; caps: string[] 
         <KpiCard
           title='Missioni dei volontari'
           value={report.missions.verified}
-          hint={`${numeroIt(report.missions.hours)} h · ${numeroIt(report.missions.kg)} kg raccolti`}
+          hint={
+            report.missions.teamDays > 0
+              ? `${numeroIt(report.missions.hours)} ore-persona · ${report.missions.teamDays} giornate del vostro team (${report.missions.people} persone)`
+              : `${numeroIt(report.missions.hours)} ore-persona · ${numeroIt(report.missions.kg)} kg raccolti`
+          }
         />
       </KpiGrid>
 

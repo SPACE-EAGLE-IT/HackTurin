@@ -8,19 +8,25 @@ import { toast } from 'sonner'
 import { DialogoAzione } from '@/components/ds/dialogo-azione'
 import { DateTrigger, PropertyField } from '@/components/ds/field-trigger'
 import { FormGrid } from '@/components/ds/form-grid'
+import { NumberField } from '@/components/ds/number-field'
+import { Scelta } from '@/components/ds/scelta'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { createMission } from '@/lib/missioni/actions'
+import type { TeamOption } from '@/lib/missioni/types'
 
 const FORM_ID = 'new-mission'
 
-export function NewMissionButton() {
+/** Staff creates a mission; with a company plan it becomes a team volunteering day. */
+export function NewMissionButton({ teams = [] }: { teams?: TeamOption[] }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dueDate, setDueDate] = useState<string | undefined>()
+  const [teamId, setTeamId] = useState<string | null>(null)
+  const [teamSize, setTeamSize] = useState<number | null>(10)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [pending, startTransition] = useTransition()
 
@@ -28,13 +34,21 @@ export function NewMissionButton() {
     setTitle('')
     setDescription('')
     setDueDate(undefined)
+    setTeamId(null)
+    setTeamSize(10)
     setErrors({})
   }
 
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     startTransition(async () => {
-      const result = await createMission({ title, description, dueDate: dueDate ?? null })
+      const result = await createMission({
+        title,
+        description,
+        dueDate: dueDate ?? null,
+        sponsorshipId: teamId,
+        teamSize: teamId ? (teamSize ?? undefined) : undefined,
+      })
       if (!result.ok) {
         setErrors(result.fieldErrors ?? {})
         if (!result.fieldErrors) toast.error(result.message)
@@ -87,6 +101,25 @@ export function NewMissionButton() {
               <DateTrigger value={dueDate} onChange={setDueDate} placeholder='Scegli una data' />
               {errors.dueDate && <p className='text-destructive text-xs'>{errors.dueDate}</p>}
             </PropertyField>
+            {teams.length > 0 && (
+              <PropertyField label='Squadra aziendale'>
+                <Scelta
+                  opzioni={teams.map(t => ({
+                    value: t.id,
+                    label: `${t.company} · ${t.daysLeft} ${t.daysLeft === 1 ? 'giornata' : 'giornate'}`,
+                  }))}
+                  value={teamId}
+                  onValueChange={setTeamId}
+                  azzera='Volontari singoli'
+                />
+              </PropertyField>
+            )}
+            {teamId && (
+              <PropertyField label='Persone in squadra'>
+                <NumberField value={teamSize} onValueChange={setTeamSize} decimals={0} unit='persone' />
+                {errors.teamSize && <p className='text-destructive text-xs'>{errors.teamSize}</p>}
+              </PropertyField>
+            )}
           </FormGrid>
         </form>
       </DialogoAzione>

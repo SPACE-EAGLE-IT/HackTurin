@@ -1,4 +1,5 @@
-import { Avviso } from '@/components/ds/avviso'
+import Link from 'next/link'
+
 import PageHeader from '@/components/ds/page-header'
 import { ListSurface } from '@/components/list-surface'
 import { EnrolmentCard } from '@/components/missioni/enrolment-card'
@@ -6,10 +7,12 @@ import { MissionKpis } from '@/components/missioni/mission-kpis'
 import { MissionTable } from '@/components/missioni/mission-table'
 import { MissionTabs } from '@/components/missioni/mission-tabs'
 import { NewMissionButton } from '@/components/missioni/new-mission-dialog'
+import { Button } from '@/components/ui/button'
+import { PARTNER_ETS } from '@/lib/payments/stripe'
 import { requirePageAccess } from '@/lib/access/guard'
 import { can } from '@/lib/access/queries'
 import { requireSession } from '@/lib/auth/session'
-import { getMissionKpis, getVolunteerProfile, listMissions } from '@/lib/missioni/queries'
+import { getMissionKpis, getVolunteerProfile, listMissions, listTeamOptions } from '@/lib/missioni/queries'
 import { isEnrolled, MISSION_TABS } from '@/lib/missioni/types'
 import { enumParam, type SearchParams } from '@/lib/search-params'
 
@@ -22,11 +25,12 @@ export default async function MissioniPage(props: { searchParams: Promise<Search
   const tab = requested === 'verifica' && !isAdmin ? 'disponibili' : requested
   const profileId = session.profile.id
 
-  const [volunteer, kpis, missions, toReview] = await Promise.all([
+  const [volunteer, kpis, missions, toReview, teams] = await Promise.all([
     getVolunteerProfile(profileId),
     getMissionKpis(profileId),
     listMissions(tab, profileId),
     isAdmin ? listMissions('verifica', profileId) : Promise.resolve([]),
+    isAdmin ? listTeamOptions() : Promise.resolve([]),
   ])
   const enrolled = isEnrolled(volunteer)
 
@@ -34,22 +38,19 @@ export default async function MissioniPage(props: { searchParams: Promise<Search
     <div className='space-y-6'>
       <PageHeader
         title='Missioni'
-        description='Piccoli interventi di cura urbana, con rimborso delle sole spese sostenute.'
-        actions={isAdmin ? <NewMissionButton /> : undefined}
+        description='Piccoli interventi di cura urbana: ore riconosciute, spese rimborsate, nessun compenso.'
+        actions={
+          <>
+            {kpis.mineVerified > 0 && (
+              <Button asChild variant='outline'>
+                <Link href='/missioni/attestato'>Attestato ore</Link>
+              </Button>
+            )}
+            {isAdmin && <NewMissionButton teams={teams} />}
+          </>
+        }
       />
-      {canWrite && !enrolled && (
-        <>
-          <Avviso tono='info'>
-            Per prendere una missione serve l’iscrizione all’associazione partner con l’assicurazione dei
-            volontari. Il volontariato non è retribuito: si rimborsano solo le spese.
-          </Avviso>
-          <EnrolmentCard
-            member={Boolean(volunteer?.ets_member_at)}
-            insured={volunteer?.insured ?? false}
-            pattoRef={volunteer?.patto_ref ?? null}
-          />
-        </>
-      )}
+      {canWrite && !enrolled && <EnrolmentCard ets={PARTNER_ETS} />}
       <MissionKpis kpis={kpis} tab={tab} />
       <ListSurface toolbar={<MissionTabs tab={tab} canReview={isAdmin} toReview={toReview.length} />}>
         <MissionTable missions={missions} tab={tab} canTake={canWrite && enrolled} />
