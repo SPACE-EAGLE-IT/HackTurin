@@ -1,4 +1,5 @@
 import { convertToModelMessages, stepCountIs, streamText, type UIMessage } from 'ai'
+import { connection } from 'next/server'
 import { z } from 'zod'
 
 import { languageModel } from '@/lib/ai/provider'
@@ -28,7 +29,9 @@ function limited(ip: string) {
 }
 
 /** GET tells the widget whether the assistant is available, without revealing anything else. */
-export function GET() {
+export async function GET() {
+  // Read at request time: a prerendered answer would freeze whether the key existed at build.
+  await connection()
   return Response.json({ available: citizenAiConfig() !== null })
 }
 
