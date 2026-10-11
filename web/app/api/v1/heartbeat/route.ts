@@ -1,26 +1,38 @@
-import { z } from "zod";
-import { supabaseAdmin } from "@/lib/supabase";
-import { handlePod, point, touchDevice } from "@/lib/podApi";
-import { MetricsSchema } from "@/lib/metrics";
+import { z } from 'zod'
 
-const Body = z.object({
+import { MetricsSchema } from '@/lib/civic/metrics'
+import { answer, readPodRequest, rejectPod, zodDetails } from '@/lib/pod/request'
+import { createAnonClient } from '@/lib/supabase/anon'
+
+const schema = z.object({
   lat: z.number().min(-90).max(90).optional(),
   lon: z.number().min(-180).max(180).optional(),
   battery: z.number().min(0).max(100).optional(),
   firmware: z.string().max(64).optional(),
-  metrics: MetricsSchema.optional(), // facoltativo: misure dei sensori insieme al battito
-});
+  metrics: MetricsSchema.optional(),
+})
 
-export function POST(req: Request) {
-  return handlePod(req, "heartbeat", async (device, raw) => {
-    const parsed = Body.safeParse(raw ?? {});
-    if (!parsed.success) return { status: 422, json: { error: "invalid_payload", details: parsed.error.flatten() } };
-    const { lat, lon, battery, firmware, metrics } = parsed.data;
-    const db = supabaseAdmin();
-    await touchDevice(device.id, { lat, lon, battery, firmware });
-    const g = point(lat, lon);
-    if (g) await db.from("device_heartbeats").insert({ device_id: device.id, geom: g, battery });
-    if (metrics) await db.from("device_readings").insert({ device_id: device.id, geom: g, metrics });
-    return { status: 200, json: { ok: true } };
-  });
+/** "I am alive" with position, battery and optional readings. */
+export async function POST(req: Request) {
+  const pod = await readPodRequest(req)
+  if (!pod.keyHash) return rejectPod(pod, 'heartbeat', 401, { error: 'unauthorized' })
+  const parsed = schema.safeParse(pod.body ?? {})
+  if (!parsed.success) {
+    return rejectPod(pod, 'heartbeat', 422, {
+      error: 'invalid_payload',
+      details: zodDetails(parsed.error.issues),
+    })
+  }
+  const b = parsed.data
+  const { data, error } = await createAnonClient().rpc('pod_heartbeat', {
+    p_key_hash: pod.keyHash,
+    p_lat: b.lat ?? null,
+    p_lon: b.lon ?? null,
+    p_battery: b.battery ?? null,
+    p_firmware: b.firmware ?? null,
+    p_metrics: b.metrics ?? null,
+    p_ip: pod.ip,
+    p_log_body: pod.logBody,
+  })
+  return error ? answer(null) : answer(data)
 }
