@@ -36,7 +36,10 @@ export function physical(dn: number, scale: number, offset: number, nodata: numb
  * have already been shifted back (water reads ~0.02, not ~-0.08), yet still declare -0.1: applying it twice
  * would push dark surfaces negative, so the flag wins.
  */
-export function reflectanceOffset(declared: number | undefined, boaOffsetApplied: boolean | undefined): number {
+export function reflectanceOffset(
+  declared: number | undefined,
+  boaOffsetApplied: boolean | undefined
+): number {
   return boaOffsetApplied ? 0 : (declared ?? 0)
 }
 
@@ -122,7 +125,8 @@ export const AOT_MIN_SPREAD = 0.02
  */
 export function aotBands(values: readonly number[]): AotBand[] {
   const sorted = [...values].sort((a, b) => a - b)
-  if (!sorted.length || sorted[sorted.length - 1] - sorted[0] < AOT_MIN_SPREAD) return values.map(() => 'media')
+  if (!sorted.length || sorted[sorted.length - 1] - sorted[0] < AOT_MIN_SPREAD)
+    return values.map(() => 'media')
   const t1 = quantile(sorted, 1 / 3)
   const t2 = quantile(sorted, 2 / 3)
   return values.map(v => (v <= t1 ? 'bassa' : v <= t2 ? 'media' : 'alta'))

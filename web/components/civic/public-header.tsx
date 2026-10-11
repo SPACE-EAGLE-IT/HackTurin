@@ -32,7 +32,7 @@ export function PublicHeader() {
     <header className='bg-background/90 sticky top-0 z-40 border-b backdrop-blur'>
       <div className='mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 md:px-6'>
         <Link href='/' className='min-w-0'>
-          <BrandLockup tagline />
+          <BrandLockup className='h-7' />
         </Link>
         <nav className='ml-4 hidden items-center gap-1 md:flex' aria-label='Sezioni'>
           {LINKS.map(l => (

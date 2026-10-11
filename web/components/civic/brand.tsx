@@ -1,36 +1,69 @@
-import { MapPinnedIcon } from 'lucide-react'
+import Image from 'next/image'
 
 import { cn } from '@/lib/utils'
 
-export const BRAND = { name: 'To.Be', tagline: 'un nuovo modo di vivere la città' } as const
+export const BRAND = { name: 'To.Be', tagline: 'un nuovo modo di vivere Torino' } as const
 
-/** The To.Be mark: a pin in the primary square. */
+/** The To.Be mark (the Mole in the circle with the red dot) on its white tile. */
 export function BrandMark({ className }: { className?: string }) {
   return (
-    <span
-      className={cn(
-        'bg-primary text-primary-foreground grid size-7 shrink-0 place-items-center rounded-md',
-        className
-      )}
-    >
-      <MapPinnedIcon className='size-4' />
-    </span>
+    <Image
+      src='/brand/tobe-icon-192.png'
+      alt={BRAND.name}
+      width={192}
+      height={192}
+      className={cn('size-7 shrink-0 rounded-md', className)}
+      priority
+    />
   )
 }
 
-/** Mark and name; `tagline` adds the claim under the name. */
-export function BrandLockup({ tagline = false, className }: { tagline?: boolean; className?: string }) {
+/**
+ * The logo: navy on light surfaces, white on dark ones. `tagline` uses the full logo with
+ * «un nuovo modo di vivere Torino»; `onDark` forces the white version (e.g. the staff rail).
+ */
+export function BrandLockup({
+  tagline = false,
+  onDark = false,
+  className,
+}: {
+  tagline?: boolean
+  onDark?: boolean
+  className?: string
+}) {
+  const file = tagline ? 'tobe-logo' : 'tobe-wordmark'
+  const [w, h] = tagline ? [1233, 429] : [1182, 363]
+  const size = cn('w-auto', tagline ? 'h-10' : 'h-6', className)
+  if (onDark) {
+    return (
+      <Image
+        src={`/brand/${file}-light.png`}
+        alt={BRAND.name}
+        width={w}
+        height={h}
+        className={size}
+        priority
+      />
+    )
+  }
   return (
-    <span className={cn('flex min-w-0 items-center gap-2', className)}>
-      <BrandMark />
-      <span className='flex min-w-0 flex-col leading-tight'>
-        <span className='font-semibold tracking-tight'>{BRAND.name}</span>
-        {tagline && (
-          <span className='text-muted-foreground hidden truncate text-xs font-normal sm:block'>
-            {BRAND.tagline}
-          </span>
-        )}
-      </span>
-    </span>
+    <>
+      <Image
+        src={`/brand/${file}.png`}
+        alt={BRAND.name}
+        width={w}
+        height={h}
+        className={cn(size, 'dark:hidden')}
+        priority
+      />
+      <Image
+        src={`/brand/${file}-light.png`}
+        alt={BRAND.name}
+        width={w}
+        height={h}
+        className={cn(size, 'hidden dark:block')}
+        priority
+      />
+    </>
   )
 }

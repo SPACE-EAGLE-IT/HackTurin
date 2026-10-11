@@ -1,19 +1,21 @@
 'use client'
 
-import { XIcon } from 'lucide-react'
+import { SatelliteIcon, XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
-import { ReportMap } from '@/components/civic/report-map'
+import { type MapZone, ReportMap } from '@/components/civic/report-map'
 import { BottoneIcona } from '@/components/ds/bottone-icona'
 import { Data } from '@/components/ds/data'
 import { SectionCard } from '@/components/ds/section-card'
 import { StatusBadge } from '@/components/ds/status-badge'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { categoryName, REPORT_STATUS, type ReportStatus } from '@/lib/civic/categories'
 import { aqiBand, WEATHER } from '@/lib/civic/metrics'
 import type { CityConditions, Station } from '@/lib/public/environment'
 import type { PublicReport } from '@/lib/public/queries'
+import type { SatelliteResult } from '@/lib/satellite/sentinel'
 
 const STATUS_TONE: Record<string, 'warning' | 'info' | 'success' | 'muted'> = {
   open: 'warning',
@@ -27,6 +29,9 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
   const [reports, setReports] = useState(initial)
   const [selected, setSelected] = useState<string | null>(null)
   const [showSensors, setShowSensors] = useState(false)
+  const [zones, setZones] = useState<MapZone[] | null>(null)
+  const [showSatellite, setShowSatellite] = useState(false)
+  const [loadingSatellite, setLoadingSatellite] = useState(false)
   const [env, setEnv] = useState<{ city: CityConditions; stations: Station[] } | null>(null)
 
   const load = useCallback(async () => {
@@ -45,6 +50,24 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
     return () => clearInterval(t)
   }, [load])
 
+  // The satellite layer is fetched on first use: the first computation can take several seconds.
+  const toggleSatellite = async () => {
+    const next = !showSatellite
+    setShowSatellite(next)
+    if (!next || zones) return
+    setLoadingSatellite(true)
+    const r = (await fetch('/api/public/satellite')
+      .then(x => x.json())
+      .catch(() => null)) as SatelliteResult | null
+    setLoadingSatellite(false)
+    if (!r?.available) {
+      setShowSatellite(false)
+      return
+    }
+    const date = new Date(r.datetime).toLocaleDateString('it-IT')
+    setZones(r.zones.map(z => ({ cap: z.cap, lat: z.lat, lon: z.lon, ndvi: z.ndvi, aot: z.aot, date })))
+  }
+
   const report = useMemo(() => reports.find(r => r.id === selected) ?? null, [reports, selected])
   const band = aqiBand(env?.city?.european_aqi)
 
@@ -53,6 +76,7 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
       <ReportMap
         reports={reports}
         stations={showSensors ? env?.stations : []}
+        zones={showSatellite ? (zones ?? []) : []}
         onSelect={setSelected}
         className='absolute inset-0'
       />
@@ -68,6 +92,18 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
           {WEATHER[env?.city?.weather_code ?? -1] ?? 'Meteo'} · Aria {band.label.toLowerCase()}
           <StatusBadge tone={showSensors ? 'success' : 'muted'} variant='badge'>
             {showSensors ? 'sensori visibili' : 'mostra sensori'}
+          </StatusBadge>
+        </Button>
+        <Button
+          variant='outline'
+          size='sm'
+          className='bg-background self-start shadow-sm'
+          onClick={toggleSatellite}
+          disabled={loadingSatellite}
+        >
+          {loadingSatellite ? <Spinner /> : <SatelliteIcon />} Satellite
+          <StatusBadge tone={showSatellite ? 'success' : 'muted'} variant='badge'>
+            {showSatellite ? 'verde per CAP' : 'Sentinel-2'}
           </StatusBadge>
         </Button>
       </div>

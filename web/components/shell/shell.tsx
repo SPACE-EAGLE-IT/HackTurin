@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 import { AssistantButton } from '@/components/assistant/assistant-button'
 import { AssistantDisc } from '@/components/assistant/assistant-disc'
 import { AssistantDock, type AssistantPreview } from '@/components/assistant/assistant-dock'
-import { BRAND, BrandMark } from '@/components/civic/brand'
+import { BRAND, BrandLockup, BrandMark } from '@/components/civic/brand'
 import AppShell, { type AppShellCrumb, type AppShellNavItem } from '@/components/ds/app-shell'
 import { type AccessMap, hasLevel } from '@/lib/access/types'
 import { useAssistantPanel } from '@/lib/ai/panel-store'
@@ -68,7 +68,7 @@ export function Shell({
       >
         <AppShell
           brand={<BrandMark className='size-6' />}
-          logotipo={<span className='font-semibold tracking-tight'>{BRAND.name}</span>}
+          logotipo={<BrandLockup onDark className='h-5' />}
           nav={nav}
           current={active?.title ?? BRAND.name}
           trail={trail}

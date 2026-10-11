@@ -4,6 +4,7 @@ import { Classifica } from '@/components/ds/grafico-classifica'
 import { KpiCard, KpiGrid } from '@/components/ds/kpi-card'
 import PageHeader from '@/components/ds/page-header'
 import { SectionCard } from '@/components/ds/section-card'
+import { SatelliteSection } from '@/components/satellite/satellite-section'
 import { categoryName } from '@/lib/civic/categories'
 import { environment } from '@/lib/public/environment'
 import { publicStats } from '@/lib/public/queries'
@@ -39,6 +40,7 @@ export default async function StatistichePage() {
         />
       </KpiGrid>
       <EnvironmentCard city={env.city} stations={env.stations} />
+      <SatelliteSection />
       <ReportsTrend data={s.byDay} />
       <div className='grid gap-4 lg:grid-cols-2'>
         <SectionCard title='Per categoria'>

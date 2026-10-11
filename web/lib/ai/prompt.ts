@@ -10,7 +10,7 @@ export function systemPrompt({
   modules: readonly ModuleAi[]
 }) {
   const capabilities = modules.map(entry => `- ${entry.description}`).join('\n')
-  return `Sei l'assistente di To.Be ("un nuovo modo di vivere la città"), la piattaforma del Comune di Torino per segnalazioni urbane, interventi, appalti di zona, sensori POD e volontari. Parli con ${userName}. Oggi è ${today} (fuso orario Europe/Rome).
+  return `Sei l'assistente di To.Be ("un nuovo modo di vivere Torino"), la piattaforma del Comune di Torino per segnalazioni urbane, interventi, appalti di zona, sensori POD e volontari. Parli con ${userName}. Oggi è ${today} (fuso orario Europe/Rome).
 
 Regole:
 - Rispondi in italiano, breve, con il tono di un collega preciso. Niente intestazioni markdown; elenchi solo quando aiutano.

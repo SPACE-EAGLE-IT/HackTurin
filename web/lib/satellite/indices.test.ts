@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
-import { aotBands, aotLevel, ndvi, physical, quantile, type Raster, reflectanceOffset, sampleAt, zoneStats } from './indices'
+import {
+  aotBands,
+  aotLevel,
+  ndvi,
+  physical,
+  quantile,
+  type Raster,
+  reflectanceOffset,
+  sampleAt,
+  zoneStats,
+} from './indices'
 
 const grid = (values: number[], width: number, res: number, scale = 1, offset = 0): Raster => ({
   data: values,
@@ -49,8 +59,18 @@ describe('zoneStats', () => {
   // 4x4 SCL grid of 10 m: one row of cloud (9), one water pixel (6), the rest vegetation (4) or built-up (5).
   const scl = grid([9, 9, 9, 9, 4, 4, 5, 5, 4, 4, 5, 6, 4, 4, 5, 5], 4, 10)
   const aot = grid(Array(16).fill(200), 4, 10, 0.001)
-  const red = grid([1, 1, 1, 1, 400, 400, 1000, 1000, 400, 400, 1000, 300, 400, 400, 1000, 1000], 4, 10, 0.0001)
-  const nir = grid([1, 1, 1, 1, 3600, 3600, 1200, 1200, 3600, 3600, 1200, 100, 3600, 3600, 1200, 1200], 4, 10, 0.0001)
+  const red = grid(
+    [1, 1, 1, 1, 400, 400, 1000, 1000, 400, 400, 1000, 300, 400, 400, 1000, 1000],
+    4,
+    10,
+    0.0001
+  )
+  const nir = grid(
+    [1, 1, 1, 1, 3600, 3600, 1200, 1200, 3600, 3600, 1200, 100, 3600, 3600, 1200, 1200],
+    4,
+    10,
+    0.0001
+  )
 
   it('masks clouds, keeps water for AOT only, reports coverage', () => {
     const s = zoneStats({ scl, aot, red, nir }, 20, 20, 40)
@@ -63,7 +83,14 @@ describe('zoneStats', () => {
 
 describe('aotBands', () => {
   it('splits the city in terciles', () => {
-    expect(aotBands([0.1, 0.2, 0.3, 0.15, 0.25, 0.35])).toEqual(['bassa', 'media', 'alta', 'bassa', 'media', 'alta'])
+    expect(aotBands([0.1, 0.2, 0.3, 0.15, 0.25, 0.35])).toEqual([
+      'bassa',
+      'media',
+      'alta',
+      'bassa',
+      'media',
+      'alta',
+    ])
   })
 
   it('calls a uniform city medium instead of inventing differences', () => {

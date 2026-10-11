@@ -73,7 +73,8 @@ export async function handleVoiceReport(
     }
   }
   const where = place.label || address
-  const capPart = place.cap && place.cap !== 'N/D' && !where.includes(place.cap) ? `, CAP ${place.cap}` : ''
+  // Add our CAP only when the address has no postcode of its own: two different CAPs would confuse the caller.
+  const capPart = place.cap && place.cap !== 'N/D' && !/\b10\d{3}\b/.test(where) ? `, CAP ${place.cap}` : ''
   const message = saved.deduped
     ? `Grazie: c'era già una segnalazione di ${categoryName(category).toLowerCase()} in ${where}${capPart}, ho aggiunto la tua.`
     : `Segnalazione di ${categoryName(category).toLowerCase()} registrata in ${where}${capPart}.`

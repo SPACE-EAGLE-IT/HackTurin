@@ -1,4 +1,4 @@
-# Handoff — To.Be · un nuovo modo di vivere la città
+# Handoff — To.Be · un nuovo modo di vivere Torino
 
 Stato al 11/10/2026. App in `web/` (kit IAMAimpresa + moduli To.Be), Supabase `zikhbchvfxivltrpggqf`,
 Vercel progetto `torinosegnala` → https://torinosegnala.vercel.app. Repo privato (licenza del kit: solo uso evento).
@@ -17,21 +17,23 @@ Avvio locale: `cd web && nvm use 22 && pnpm dev`. Controlli: `pnpm check`, `pnpm
 | Area Comune | Segnalazioni, Interventi + Percorsi, Appalti, POD, Help desk, Missioni, Fondo, Impatto, Accessi | permessi del kit; il primo account è admin |
 | Volontari | `/volontari`, `/missioni`, `/missioni/attestato` | Space Eagle ETS; livelli, attestato ore, squadre aziendali, rimborsi entro 10 €/g e 150 €/mese |
 | Aziende | `/aziende`, `/impatto` | giornata di volontariato 1.500 €, adozione 900 €/3 mesi, 3.500 €/anno con 2 giornate (Stripe) |
-| Satellite (API) | `/api/public/satellite` | Sentinel-2 L2A (Earth Search, senza chiavi): AOT e NDVI per CAP |
-| Numero verde (backend) | `/api/voice/report`, `/api/voice/zone`, `scripts/voice/setup-elevenlabs.mjs`, `docs/VOICE.md` | webhook protetti da `VOICE_TOOL_SECRET`; blocco «Preferisci parlare?» su `/segnala` |
+| Satellite Sentinel-2 | `/statistiche` («Dallo spazio»), mappa → «Satellite» | L2A da Earth Search (nessuna chiave): indice verde (NDVI) e foschia (AOT) per CAP, cache 12 h |
+| Numero verde ElevenLabs | `/api/voice/report`, `/api/voice/zone`, `docs/VOICE.md` | webhook provati in locale (401 senza segreto, segnalazione creata e geolocalizzata). Si attiva con `bash scripts/voice/activate.sh` |
+| Logo | `public/brand/tobe-*` | logo, versione chiara per il tema scuro, favicon e icone app ricavati dal foglio adesivi |
 
 ## Da finire (lavori interrotti dal limite di sessione)
 
-1. **Satellite, interfaccia**: manca la sezione su `/statistiche` e il livello «Satellite» sulla mappa. L'API c'è già.
-   Limite noto: nella scena del 05/10/2026 l'AOT di Sen2Cor è quasi costante sulla città (0,139), quindi le fasce
-   risultano tutte «media». L'NDVI invece distingue bene le zone. Presentarlo come *stima*, con
-   l'attribuzione «Contiene dati Copernicus Sentinel modificati 2026». Per l'NO₂ valutare Sentinel-5P (~5 km).
+1. **Satellite, limiti**: nella scena del 05/10/2026 l'AOT di Sen2Cor è quasi costante (0,14 = foschia leggera),
+   quindi la pagina dice che la foschia è uniforme invece di inventare differenze; l'indice verde distingue bene le
+   zone (colline 10131–10133 ≈ 60, Barriera/centro ≈ 11–15). Per l'NO₂ valutare Sentinel-5P (~5 km).
 2. **PDF del report di sostenibilità**: la ricerca di conformità è in `docs/VSME_COMPLIANCE.md` (VSME, Omnibus,
    Direttiva 2024/825), con mappatura e dichiarazioni obbligatorie. **Non ancora fatti**:
    - la route `app/api/impatto/[id]/pdf` con `@react-pdf/renderer` (la dipendenza è già installata);
    - l'anteprima con iframe e il riquadro «Conformità VSME» nella pagina del report.
-3. **Numero verde**: si attiva quando ci sono le chiavi (vedi sotto). Il codice non è ancora stato provato con un agente
-   ElevenLabs reale.
+3. **Numero verde**: crea la chiave su elevenlabs.io (Developers → API Keys, permessi Agents), mettila in
+   `web/.env.local` come `ELEVENLABS_API_KEY=...`, poi da `web/` lancia `bash scripts/voice/activate.sh`: genera il
+   segreto, crea l'agente (LLM Claude dentro ElevenLabs), carica tutto su Vercel e ripubblica. Per un numero vero:
+   importa un numero Twilio nell'agente (vedi `docs/VOICE.md`). Da provare con l'agente reale.
 4. Verifica a vista delle pagine riservate da loggati (desktop 1440 e mobile 390, tema chiaro e scuro).
 
 ## Chiavi: le inserisce una persona del team, non l'assistente AI

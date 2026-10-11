@@ -9,6 +9,8 @@ import { useEffect, useRef, useState } from 'react'
 import { tokenColor } from '@/components/civic/token-color'
 import { CATEGORIES, TORINO_CENTER } from '@/lib/civic/categories'
 import { metricLabel, metricUnit, pm25Band } from '@/lib/civic/metrics'
+import { greenBand, greenIndex } from '@/lib/satellite/green'
+import { aotLevel } from '@/lib/satellite/indices'
 
 const STYLE = {
   light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
@@ -17,6 +19,16 @@ const STYLE = {
 
 export type MapReport = { id: string; category: string; lat: number; lon: number; severity: number }
 export type MapDevice = { id: string; name: string; type: string; lat: number; lon: number; online: boolean }
+/** A Sentinel-2 zone reading: green cover and haze around a CAP centroid. */
+export type MapZone = {
+  cap: string
+  lat: number
+  lon: number
+  ndvi: number | null
+  aot: number
+  date: string
+}
+
 export type MapStation = {
   id: string
   source: string
@@ -53,6 +65,7 @@ export function ReportMap({
   reports,
   devices = [],
   stations = [],
+  zones = [],
   heat = false,
   onSelect,
   className = 'h-full w-full',
@@ -61,6 +74,7 @@ export function ReportMap({
   reports: MapReport[]
   devices?: MapDevice[]
   stations?: MapStation[]
+  zones?: MapZone[]
   heat?: boolean
   onSelect?: (id: string) => void
   className?: string
@@ -255,8 +269,31 @@ export function ReportMap({
         )
         .addTo(m)
     })
-    markers.current = [...deviceMarkers, ...stationMarkers]
-  }, [devices, stations, ready])
+    const zoneMarkers = zones.map(z => {
+      const band = greenBand(z.ndvi)
+      const pill = document.createElement('div')
+      pill.className =
+        'flex cursor-pointer items-center gap-1.5 rounded-full bg-popover px-2 py-0.5 text-xs font-medium text-popover-foreground shadow-sm ring-1 ring-border'
+      const dot = document.createElement('span')
+      dot.className = `size-2 rounded-full ${TONE_DOT[band.tone === 'info' ? 'muted' : band.tone]}`
+      const label = document.createElement('span')
+      label.textContent = `Verde ${greenIndex(z.ndvi)}`
+      pill.append(dot, label)
+      return new maplibregl.Marker({ element: pill })
+        .setLngLat([z.lon, z.lat])
+        .setPopup(
+          new maplibregl.Popup({ offset: 12, closeButton: false }).setDOMContent(
+            popupNode(`CAP ${z.cap} · Sentinel-2`, [
+              `${band.label} (NDVI ${z.ndvi?.toFixed(2) ?? 'n/d'})`,
+              `${aotLevel(z.aot)} (AOT ${z.aot.toFixed(2)})`,
+              `Immagine del ${z.date}`,
+            ])
+          )
+        )
+        .addTo(m)
+    })
+    markers.current = [...deviceMarkers, ...stationMarkers, ...zoneMarkers]
+  }, [devices, stations, zones, ready])
 
   // MapLibre's stylesheet forces `position: relative` on its container, which beats Tailwind's
   // layered utilities: the caller's sizing goes on a wrapper and the map just fills it.

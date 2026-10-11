@@ -171,7 +171,8 @@ async function computeScene(item: StacItem, signal: AbortSignal): Promise<Satell
 async function compute(): Promise<SatelliteResult> {
   const signal = AbortSignal.timeout(BUDGET_MS)
   const scenes = (await searchScenes(signal)).slice(0, MAX_SCENES)
-  if (!scenes.length) return { available: false, reason: 'Nessuna immagine poco nuvolosa negli ultimi 60 giorni.' }
+  if (!scenes.length)
+    return { available: false, reason: 'Nessuna immagine poco nuvolosa negli ultimi 60 giorni.' }
   let last: SatelliteResult | null = null
   for (const s of scenes) {
     const r = await computeScene(s, signal)
@@ -206,7 +207,8 @@ export function satelliteZones(): Promise<SatelliteResult> {
       if (!(e instanceof Unavailable)) console.warn('[satellite]', e)
       return {
         available: false,
-        reason: e instanceof Unavailable ? e.message : 'Servizio satellitare non raggiungibile, riprova più tardi.',
+        reason:
+          e instanceof Unavailable ? e.message : 'Servizio satellitare non raggiungibile, riprova più tardi.',
       }
     })
     .finally(() => (inflight = null))

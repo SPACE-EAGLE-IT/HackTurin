@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <Card className='w-full'>
           <CardContent className='space-y-6'>
             <div className='flex justify-center'>
-              <BrandLockup tagline />
+              <BrandLockup tagline className='h-14' />
             </div>
             <LoginForm next={next} error={error} />
           </CardContent>

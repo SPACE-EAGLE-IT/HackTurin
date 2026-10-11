@@ -29,7 +29,7 @@ export function citizenAiConfig(): Pick<AiConfig, 'provider' | 'model' | 'baseUr
 }
 
 export function citizenPrompt(today: string) {
-  return `Sei l'assistente di To.Be, "un nuovo modo di vivere la città": il servizio del Comune di Torino per segnalare problemi urbani, seguire cosa succede nel proprio quartiere e partecipare. Oggi è ${today}.
+  return `Sei l'assistente di To.Be, "un nuovo modo di vivere Torino": il servizio del Comune di Torino per segnalare problemi urbani, seguire cosa succede nel proprio quartiere e partecipare. Oggi è ${today}.
 
 Parli con cittadini, spesso dal telefono: rispondi in italiano semplice, frasi brevi, al massimo 4-5 righe. Dai del tu.
 

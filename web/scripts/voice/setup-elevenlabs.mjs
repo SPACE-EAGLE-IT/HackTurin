@@ -13,7 +13,14 @@
 const API = process.env.ELEVENLABS_API_BASE ?? 'https://api.elevenlabs.io'
 const KEY = process.env.ELEVENLABS_API_KEY
 const SECRET = process.env.VOICE_TOOL_SECRET
-const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/+$/, '')
+// The webhook must be public: VOICE_PUBLIC_URL wins, then an https NEXT_PUBLIC_SITE_URL, then production.
+const SITE = [
+  process.env.VOICE_PUBLIC_URL,
+  process.env.NEXT_PUBLIC_SITE_URL,
+  'https://torinosegnala.vercel.app',
+]
+  .map(u => (u ?? '').replace(/\/+$/, ''))
+  .find(u => /^https:\/\//.test(u) && !/localhost|127\.0\.0\.1/.test(u))
 const AGENT_ID = process.env.ELEVENLABS_AGENT_ID
 // Claude inside ElevenLabs: Sonnet is the best quality/latency trade-off for a live phone call.
 const LLM = process.env.ELEVENLABS_LLM ?? 'claude-sonnet-5-5'
@@ -184,6 +191,8 @@ if (agentId) {
   agentId = created.agent_id
   console.log(`+ agente creato: ${agentId}`)
 }
+// Machine-readable line for scripts/voice/activate.sh.
+console.log(`AGENT_ID=${agentId}`)
 
 console.log(`
 Fatto. LLM: ${LLM} · voce: ${VOICE_ID} · webhook: ${SITE}/api/voice/report
