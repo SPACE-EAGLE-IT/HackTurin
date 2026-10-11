@@ -17,7 +17,7 @@ Avvio locale: `cd web && nvm use 22 && pnpm dev`. Controlli: `pnpm check`, `pnpm
 | Area Comune | Segnalazioni, Interventi + Percorsi, Appalti, POD, Help desk, Missioni, Fondo, Impatto, Accessi | permessi del kit; il primo account è admin |
 | Volontari | `/volontari`, `/missioni`, `/missioni/attestato` | Space Eagle ETS; livelli, attestato ore, squadre aziendali, rimborsi entro 10 €/g e 150 €/mese |
 | Aziende | `/aziende`, `/impatto` | giornata di volontariato 1.500 €, adozione 900 €/3 mesi, 3.500 €/anno con 2 giornate (Stripe) |
-| Satellite Sentinel-2 | `/statistiche` («Dallo spazio»), mappa → «Satellite» | L2A da Earth Search (nessuna chiave): indice verde (NDVI) e foschia (AOT) per CAP, cache 12 h |
+| Satellite Sentinel-2 | `/statistiche` («Dallo spazio»); mappa: pulsante «Satellite» (foto Sentinel-2 cloudless EOX, CC BY-NC-SA) e «Dati Sentinel-2» (immagine NDVI pixel per pixel da `/api/public/satellite/ndvi` + indice per CAP) | L2A da Earth Search (nessuna chiave): indice verde (NDVI) e foschia (AOT) per CAP, cache 12 h |
 | Numero verde ElevenLabs | `/api/voice/report`, `/api/voice/zone`, `docs/VOICE.md` | webhook provati in locale (401 senza segreto, segnalazione creata e geolocalizzata). Si attiva con `bash scripts/voice/activate.sh` |
 | Logo | `public/brand/tobe-*` | logo, versione chiara per il tema scuro, favicon e icone app ricavati dal foglio adesivi |
 

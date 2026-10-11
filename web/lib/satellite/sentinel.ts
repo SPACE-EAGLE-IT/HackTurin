@@ -5,6 +5,8 @@ import { CAP_CENTROIDS } from '@/lib/civic/cap'
 import { TORINO_BOUNDS } from '@/lib/civic/categories'
 
 import { type AotBand, aotBands, type Raster, reflectanceOffset, zoneStats } from './indices'
+import { ndviRgba, OVERLAY_BOUNDS } from './ndvi-image'
+import { encodePng } from './png'
 import { lonLatToUtm } from './utm'
 
 const STAC = 'https://earth-search.aws.element84.com/v1'
@@ -18,6 +20,7 @@ const ZONE_SIZE = 1000 // metres, side of the square read around each CAP centro
 const MARGIN = 800 // metres added around the CAP centroids to build the one city window per band
 const TARGET_RES = 20 // metres: SCL native grid; 10 m bands are read from their 20 m overview
 const BUDGET_MS = 45000
+const OVERLAY_WIDTH = 900 // px across the city: ~25 m per pixel, close to the 20 m source
 
 export type SatelliteZone = {
   cap: string
@@ -213,4 +216,40 @@ export function satelliteZones(): Promise<SatelliteResult> {
     })
     .finally(() => (inflight = null))
   return inflight
+}
+
+// ---------------------------------------------------------------------------
+// NDVI image overlay of the same scene, for the map.
+
+/** The NDVI image of the scene used for the zones, as a PNG over OVERLAY_BOUNDS; null when unavailable. */
+export async function ndviOverlayPng(): Promise<{ png: Buffer; sceneId: string; datetime: string } | null> {
+  const zones = await satelliteZones()
+  if (!zones.available) return null
+  const signal = AbortSignal.timeout(BUDGET_MS)
+  const r = await fetch(`${STAC}/collections/${COLLECTION}/items/${zones.sceneId}`, {
+    cache: 'no-store',
+    signal,
+  })
+  if (!r.ok) return null
+  const item = (await r.json()) as StacItem
+  const [w, s, e, n] = OVERLAY_BOUNDS
+  const corners = [lonLatToUtm(w, s, 32), lonLatToUtm(w, n, 32), lonLatToUtm(e, s, 32), lonLatToUtm(e, n, 32)]
+  const box = {
+    minX: Math.min(...corners.map(c => c.x)),
+    maxX: Math.max(...corners.map(c => c.x)),
+    minY: Math.min(...corners.map(c => c.y)),
+    maxY: Math.max(...corners.map(c => c.y)),
+  }
+  const boa = item.properties['earthsearch:boa_offset_applied']
+  const [scl, red, nir] = await Promise.all([
+    readBand(item.assets.scl, box, signal),
+    readBand(item.assets.red, box, signal, boa),
+    readBand(item.assets.nir, box, signal, boa),
+  ])
+  const img = ndviRgba({ red, nir, scl }, OVERLAY_BOUNDS, OVERLAY_WIDTH)
+  return {
+    png: encodePng(img.width, img.height, img.rgba),
+    sceneId: item.id,
+    datetime: item.properties.datetime,
+  }
 }

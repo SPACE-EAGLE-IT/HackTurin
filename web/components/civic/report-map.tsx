@@ -11,6 +11,24 @@ import { CATEGORIES, TORINO_CENTER } from '@/lib/civic/categories'
 import { metricLabel, metricUnit, pm25Band } from '@/lib/civic/metrics'
 import { greenBand, greenIndex } from '@/lib/satellite/green'
 import { aotLevel } from '@/lib/satellite/indices'
+import { OVERLAY_BOUNDS } from '@/lib/satellite/ndvi-image'
+
+/** Sentinel-2 cloudless mosaic (EOX, CC BY-NC-SA 4.0). CARTO's raster labels now need a key, so none on top. */
+const SATELLITE_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  glyphs: 'https://tiles.basemaps.cartocdn.com/fonts/{fontstack}/{range}.pbf',
+  sources: {
+    s2: {
+      type: 'raster',
+      tiles: ['https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless-2024_3857/default/g/{z}/{y}/{x}.jpg'],
+      tileSize: 256,
+      maxzoom: 15,
+      attribution:
+        '<a href="https://s2maps.eu" target="_blank">Sentinel-2 cloudless 2024</a> di EOX IT Services GmbH (contiene dati Copernicus Sentinel modificati 2024)',
+    },
+  },
+  layers: [{ id: 's2', type: 'raster', source: 's2' }],
+}
 
 const STYLE = {
   light: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
@@ -70,6 +88,8 @@ export function ReportMap({
   onSelect,
   className = 'h-full w-full',
   fitToReports = false,
+  basemap = 'mappa',
+  ndviLayer = false,
 }: {
   reports: MapReport[]
   devices?: MapDevice[]
@@ -79,6 +99,10 @@ export function ReportMap({
   onSelect?: (id: string) => void
   className?: string
   fitToReports?: boolean
+  /** 'satellite' swaps the street map for the Sentinel-2 cloudless mosaic. */
+  basemap?: 'mappa' | 'satellite'
+  /** Shows the NDVI image of the latest clear Sentinel-2 scene over the city. */
+  ndviLayer?: boolean
 }) {
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
@@ -97,7 +121,7 @@ export function ReportMap({
     if (!el.current) return
     const m = new maplibregl.Map({
       container: el.current,
-      style: STYLE[theme],
+      style: basemap === 'satellite' ? SATELLITE_STYLE : STYLE[theme],
       center: TORINO_CENTER,
       zoom: 11.6,
       attributionControl: { compact: true },
@@ -202,7 +226,28 @@ export function ReportMap({
       m.remove()
       map.current = null
     }
-  }, [theme])
+  }, [theme, basemap])
+
+  // The NDVI image is added on first use only: it is a ~1 MB download.
+  useEffect(() => {
+    const m = map.current
+    if (!ready || !m) return
+    if (ndviLayer && !m.getSource('ndvi')) {
+      const [w, s, e, n] = OVERLAY_BOUNDS
+      m.addSource('ndvi', {
+        type: 'image',
+        url: '/api/public/satellite/ndvi',
+        coordinates: [
+          [w, n],
+          [e, n],
+          [e, s],
+          [w, s],
+        ],
+      })
+      m.addLayer({ id: 'ndvi', type: 'raster', source: 'ndvi', paint: { 'raster-opacity': 0.8 } }, 'heat')
+    }
+    if (m.getLayer('ndvi')) m.setLayoutProperty('ndvi', 'visibility', ndviLayer ? 'visible' : 'none')
+  }, [ndviLayer, ready])
 
   useEffect(() => {
     const m = map.current

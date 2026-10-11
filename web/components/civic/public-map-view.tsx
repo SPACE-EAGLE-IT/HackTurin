@@ -1,6 +1,6 @@
 'use client'
 
-import { SatelliteIcon, XIcon } from 'lucide-react'
+import { LeafIcon, MapIcon, SatelliteIcon, XIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -15,6 +15,7 @@ import { categoryName, REPORT_STATUS, type ReportStatus } from '@/lib/civic/cate
 import { aqiBand, WEATHER } from '@/lib/civic/metrics'
 import type { CityConditions, Station } from '@/lib/public/environment'
 import type { PublicReport } from '@/lib/public/queries'
+import { NDVI_RAMP } from '@/lib/satellite/ndvi-image'
 import type { SatelliteResult } from '@/lib/satellite/sentinel'
 
 const STATUS_TONE: Record<string, 'warning' | 'info' | 'success' | 'muted'> = {
@@ -32,6 +33,7 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
   const [zones, setZones] = useState<MapZone[] | null>(null)
   const [showSatellite, setShowSatellite] = useState(false)
   const [loadingSatellite, setLoadingSatellite] = useState(false)
+  const [basemap, setBasemap] = useState<'mappa' | 'satellite'>('mappa')
   const [env, setEnv] = useState<{ city: CityConditions; stations: Station[] } | null>(null)
 
   const load = useCallback(async () => {
@@ -77,6 +79,8 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
         reports={reports}
         stations={showSensors ? env?.stations : []}
         zones={showSatellite ? (zones ?? []) : []}
+        ndviLayer={showSatellite}
+        basemap={basemap}
         onSelect={setSelected}
         className='absolute inset-0'
       />
@@ -101,10 +105,25 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
           onClick={toggleSatellite}
           disabled={loadingSatellite}
         >
-          {loadingSatellite ? <Spinner /> : <SatelliteIcon />} Satellite
+          {loadingSatellite ? <Spinner /> : <LeafIcon />} Dati Sentinel-2
           <StatusBadge tone={showSatellite ? 'success' : 'muted'} variant='badge'>
-            {showSatellite ? 'verde per CAP' : 'Sentinel-2'}
+            {showSatellite ? 'verde visibile' : 'mostra verde'}
           </StatusBadge>
+        </Button>
+        {showSatellite && zones && <NdviLegend date={zones[0]?.date} />}
+      </div>
+
+      {/* Small basemap switch: street map or the Sentinel-2 cloudless photo of the city. */}
+      <div className='absolute top-3 right-3'>
+        <Button
+          variant='outline'
+          size='sm'
+          className='bg-background shadow-sm'
+          aria-pressed={basemap === 'satellite'}
+          onClick={() => setBasemap(b => (b === 'satellite' ? 'mappa' : 'satellite'))}
+        >
+          {basemap === 'satellite' ? <MapIcon /> : <SatelliteIcon />}
+          {basemap === 'satellite' ? 'Mappa' : 'Satellite'}
         </Button>
       </div>
 
@@ -153,6 +172,24 @@ export function PublicMapView({ initial }: { initial: PublicReport[] }) {
           </SectionCard>
         </div>
       )}
+    </div>
+  )
+}
+
+// The legend reuses the overlay's own ramp, so the colours always match the image.
+const NDVI_GRADIENT = `linear-gradient(to right, ${NDVI_RAMP.map(([, r, g, b]) => `rgb(${r} ${g} ${b})`).join(', ')})`
+
+function NdviLegend({ date }: { date?: string }) {
+  return (
+    <div className='bg-popover text-popover-foreground ring-border w-56 space-y-1 rounded-md p-2 text-xs shadow-sm ring-1'>
+      <p className='font-medium'>Vegetazione (NDVI) · Sentinel-2</p>
+      <div className='h-2 rounded-full' style={{ background: NDVI_GRADIENT }} />
+      <div className='text-muted-foreground flex justify-between'>
+        <span>Costruito</span>
+        <span>Prati</span>
+        <span>Alberi</span>
+      </div>
+      {date && <p className='text-muted-foreground'>{`Immagine del ${date} · Copernicus`}</p>}
     </div>
   )
 }
