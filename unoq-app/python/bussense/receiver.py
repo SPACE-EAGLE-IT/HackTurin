@@ -44,8 +44,11 @@ class Receiver:
                  debug_save_frames: bool = False, debug_frames_max: int = 300):
         self.store, self.host, self.port = store, host, port
         self.on_frame = on_frame  # callback(jpeg: bytes, meta: dict) -> per la visione (R2)
+        self.on_report = None     # callback(rec: dict) dopo ogni segnalazione salvata -> invio a TorinoSegnala
+        self.fix_provider = None  # callable -> fix di riserva (modulo GPS / posizione fissa) se manca il telefono
         self.ram = _ram_dir()
         self.last_fix: dict | None = None
+        self.last_fix_mono = 0.0  # time.monotonic() all'arrivo di last_fix
         self.env: dict = {}
         self._env_ts = 0.0
         self._recent: deque = deque(maxlen=200)  # (ts_ms, type, lat, lon)
@@ -115,6 +118,7 @@ class Receiver:
     def _track(self, m: dict):
         self.counters["track"] += 1
         self.last_fix = m
+        self.last_fix_mono = time.monotonic()
         flags = 0
         if m.get("acc_m") is None or m["acc_m"] > MAX_ACC_M:
             flags |= F_GPS_POOR
@@ -185,12 +189,21 @@ class Receiver:
     def report(self, **o) -> dict:
         """Punto d'ingresso unico per salvare una segnalazione (usato anche dalla visione)."""
         o.setdefault("env", self.env_snapshot())
-        if o.get("lat") is None and self.last_fix:  # evento senza fix: usa l'ultimo fix noto
-            for k in ("lat", "lon", "acc_m", "speed_mps", "heading_deg"):
-                o[k] = self.last_fix.get(k)
+        if o.get("lat") is None:  # evento senza fix: usa l'ultimo fix noto, poi la fonte di riserva
+            fix = self.last_fix if self.last_fix and self.last_fix.get("lat") is not None else None
+            if fix is None and self.fix_provider:
+                fix = self.fix_provider()
+            if fix:
+                for k in ("lat", "lon", "acc_m", "speed_mps", "heading_deg"):
+                    o[k] = fix.get(k)
         rec = self.store.add_observation(o)
         if o.get("lat") is not None:
             self._recent.append((o["ts_ms"], o["type"], o["lat"], o["lon"]))
+        if self.on_report:
+            try:
+                self.on_report(rec)
+            except Exception:
+                log.exception("on_report fallito (la segnalazione resta salvata in locale)")
         return rec
 
     def _is_duplicate(self, m: dict) -> bool:
