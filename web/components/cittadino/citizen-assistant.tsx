@@ -216,7 +216,9 @@ function DraftCard({ draft }: { draft: ReportDraft }) {
     <div className='w-full space-y-2'>
       <PannelloScheda occhiello='Segnalazione pronta'>
         <RigaDettaglio label='Cosa'>{draft.categoria_nome}</RigaDettaglio>
-        <RigaDettaglio label='Dove'>{`${draft.indirizzo} · CAP ${draft.cap}`}</RigaDettaglio>
+        <RigaDettaglio label='Dove'>
+          {/\b10\d{3}\b/.test(draft.indirizzo) ? draft.indirizzo : `${draft.indirizzo} · CAP ${draft.cap}`}
+        </RigaDettaglio>
         {draft.descrizione && <RigaDettaglio label='Dettagli'>{draft.descrizione}</RigaDettaglio>}
       </PannelloScheda>
       {state === 'error' && <Avviso tono='destructive'>Non inviata: riprova tra un minuto.</Avviso>}

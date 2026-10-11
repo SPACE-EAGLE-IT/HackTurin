@@ -1,3 +1,4 @@
+import { InfoDot } from '@/components/ds/info-dot'
 import { SetupWizard } from '@/components/assistant/setup-wizard'
 import { UsageKpis } from '@/components/assistant/usage-kpis'
 import { UsageTable } from '@/components/assistant/usage-table'
@@ -49,7 +50,10 @@ export default async function AssistantSetupPage() {
       />
       <UsageKpis usage={usage} />
       <SetupWizard status={status} />
-      <SectionCard title='Chiamate per modello' info='Mese corrente.'>
+      <SectionCard
+        title='Chiamate per modello'
+        info={<InfoDot label='Informazioni'>{'Mese corrente.'}</InfoDot>}
+      >
         <UsageTable rows={usage.byModel} />
       </SectionCard>
     </div>

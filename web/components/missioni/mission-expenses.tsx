@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import type { ColumnDef } from '@tanstack/react-table'
 import { toast } from 'sonner'
 
+import { InfoDot } from '@/components/ds/info-dot'
 import { Avviso } from '@/components/ds/avviso'
 import { Data } from '@/components/ds/data'
 import { DataTable } from '@/components/ds/data-table'
@@ -87,7 +88,13 @@ export function MissionExpenses({
   return (
     <SectionCard
       title='Rimborsi spese'
-      info='Il volontario non è retribuito: l’associazione rimborsa solo le spese. Quelle autocertificate hanno un tetto di 10 € al giorno e 150 € al mese (CTS art. 17 c.4).'
+      info={
+        <InfoDot label='Informazioni'>
+          {
+            'Il volontario non è retribuito: l’associazione rimborsa solo le spese. Quelle autocertificate hanno un tetto di 10 € al giorno e 150 € al mese (CTS art. 17 c.4).'
+          }
+        </InfoDot>
+      }
       action={
         expenses.length > 0 ? <span className='text-muted-foreground text-sm'>{euro(total)}</span> : undefined
       }

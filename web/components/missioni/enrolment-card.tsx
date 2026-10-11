@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
+import { InfoDot } from '@/components/ds/info-dot'
 import { Interruttore } from '@/components/ds/interruttore'
 import { PannelloScheda, RigaDettaglio } from '@/components/ds/pannello-scheda'
 import { SectionCard } from '@/components/ds/section-card'
@@ -29,7 +30,11 @@ export function EnrolmentCard({ ets }: { ets: string }) {
   return (
     <SectionCard
       title={`Diventa volontario con ${ets}`}
-      info='Le missioni si svolgono nel patto di collaborazione tra il Comune di Torino e l’associazione.'
+      info={
+        <InfoDot label='Informazioni'>
+          {'Le missioni si svolgono nel patto di collaborazione tra il Comune di Torino e l’associazione.'}
+        </InfoDot>
+      }
     >
       <div className='grid gap-4 lg:grid-cols-2'>
         <PannelloScheda occhiello='Cosa ricevi'>

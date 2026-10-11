@@ -4,6 +4,7 @@ import { useState, useTransition, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
+import { InfoDot } from '@/components/ds/info-dot'
 import { PropertyField } from '@/components/ds/field-trigger'
 import { FormGrid } from '@/components/ds/form-grid'
 import { NumberField } from '@/components/ds/number-field'
@@ -74,7 +75,11 @@ export function MissionSubmitForm({
   return (
     <SectionCard
       title='Esito della missione'
-      info='Le ore attestano l’attività svolta: non sono una base di pagamento.'
+      info={
+        <InfoDot label='Informazioni'>
+          {'Le ore attestano l’attività svolta: non sono una base di pagamento.'}
+        </InfoDot>
+      }
     >
       <form onSubmit={onSubmit}>
         <FormGrid>

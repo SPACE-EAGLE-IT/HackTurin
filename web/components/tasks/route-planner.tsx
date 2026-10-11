@@ -9,6 +9,7 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
+import { InfoDot } from '@/components/ds/info-dot'
 import { tokenColor } from '@/components/civic/token-color'
 import { EmptyState } from '@/components/ds/empty-state'
 import { DateTrigger, PropertyField } from '@/components/ds/field-trigger'
@@ -185,7 +186,12 @@ export function RoutePlanner({ tasks, people }: { tasks: RoutableTask[]; people:
 
   return (
     <div className='grid grid-cols-[minmax(0,1fr)] gap-6 *:min-w-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]'>
-      <SectionCard title='Mappa' info='Tocca la mappa per spostare il deposito di partenza.'>
+      <SectionCard
+        title='Mappa'
+        info={
+          <InfoDot label='Informazioni'>{'Tocca la mappa per spostare il deposito di partenza.'}</InfoDot>
+        }
+      >
         <div ref={el} className='h-[60vh] min-h-96 overflow-hidden rounded-md' />
       </SectionCard>
       <div className='space-y-6'>

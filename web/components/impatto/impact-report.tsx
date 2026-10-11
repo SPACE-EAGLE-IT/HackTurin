@@ -1,3 +1,4 @@
+import { InfoDot } from '@/components/ds/info-dot'
 import { Avviso } from '@/components/ds/avviso'
 import { Classifica } from '@/components/ds/grafico-classifica'
 import { KpiCard, KpiGrid } from '@/components/ds/kpi-card'
@@ -67,7 +68,11 @@ export function ImpactReport({ report, caps }: { report: Report; caps: string[] 
         </SectionCard>
         <SectionCard
           title='Qualità dell’aria'
-          info='Ultima lettura dei POD nelle zone adottate, nelle ultime tre ore.'
+          info={
+            <InfoDot label='Informazioni'>
+              {'Ultima lettura dei POD nelle zone adottate, nelle ultime tre ore.'}
+            </InfoDot>
+          }
         >
           {report.air.pods === 0 ? (
             <p className='text-muted-foreground text-sm'>Nessun POD attivo nelle zone adottate.</p>

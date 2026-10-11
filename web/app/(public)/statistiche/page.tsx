@@ -1,3 +1,4 @@
+import { InfoDot } from '@/components/ds/info-dot'
 import { EnvironmentCard } from '@/components/civic/environment-card'
 import { ReportsTrend } from '@/components/civic/stats-charts'
 import { Classifica } from '@/components/ds/grafico-classifica'
@@ -46,7 +47,10 @@ export default async function StatistichePage() {
         <SectionCard title='Per categoria'>
           <Classifica voci={s.byCategory.map(c => ({ nome: categoryName(c.slug), valore: c.total }))} />
         </SectionCard>
-        <SectionCard title='Zone con più problemi aperti' info='CAP stimato dal centroide più vicino.'>
+        <SectionCard
+          title='Zone con più problemi aperti'
+          info={<InfoDot label='Informazioni'>{'CAP stimato dal centroide più vicino.'}</InfoDot>}
+        >
           <Classifica
             voci={s.byCap.slice(0, 10).map(c => ({ nome: `CAP ${c.cap}`, valore: c.open }))}
             conQuota={false}
@@ -55,7 +59,11 @@ export default async function StatistichePage() {
       </div>
       <SectionCard
         title='Il fondo dei volontari'
-        info='Donazioni all’associazione partner: coprono rimborsi spese e materiali.'
+        info={
+          <InfoDot label='Informazioni'>
+            {'Donazioni all’associazione partner: coprono rimborsi spese e materiali.'}
+          </InfoDot>
+        }
       >
         <KpiGrid count={4}>
           <KpiCard title='Raccolti' display={`${Number(s.fund.raised).toLocaleString('it-IT')} €`} />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 
+import { InfoDot } from '@/components/ds/info-dot'
 import { Avviso } from '@/components/ds/avviso'
 import { Classifica } from '@/components/ds/grafico-classifica'
 import { KpiCard, KpiGrid } from '@/components/ds/kpi-card'
@@ -30,7 +31,13 @@ export function SatelliteSection() {
   return (
     <SectionCard
       title='Dallo spazio · Sentinel-2'
-      info='Immagini gratuite del programma europeo Copernicus, risoluzione 10–20 m, un passaggio ogni pochi giorni.'
+      info={
+        <InfoDot label='Informazioni'>
+          {
+            'Immagini gratuite del programma europeo Copernicus, risoluzione 10–20 m, un passaggio ogni pochi giorni.'
+          }
+        </InfoDot>
+      }
     >
       {!data ? (
         <div className='space-y-3'>

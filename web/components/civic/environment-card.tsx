@@ -1,3 +1,4 @@
+import { InfoDot } from '@/components/ds/info-dot'
 import { SectionCard } from '@/components/ds/section-card'
 import { StatusBadge } from '@/components/ds/status-badge'
 import { aqiBand, pm25Band, WEATHER } from '@/lib/civic/metrics'
@@ -37,7 +38,9 @@ export function EnvironmentCard({ city, stations }: { city: CityConditions; stat
   return (
     <SectionCard
       title='Aria e clima ora'
-      info={`Fonti: ${ENVIRONMENT_SOURCES.map(s => s.name).join(', ')}. I dati della città sono un modello, quelli a terra sono misure.`}
+      info={
+        <InfoDot label='Informazioni'>{`Fonti: ${ENVIRONMENT_SOURCES.map(s => s.name).join(', ')}. I dati della città sono un modello, quelli a terra sono misure.`}</InfoDot>
+      }
     >
       <div className='flex flex-wrap items-center gap-6'>
         <div>

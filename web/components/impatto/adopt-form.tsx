@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 
+import { InfoDot } from '@/components/ds/info-dot'
 import { Avviso } from '@/components/ds/avviso'
 import { PropertyField } from '@/components/ds/field-trigger'
 import { FormGrid } from '@/components/ds/form-grid'
@@ -54,7 +55,13 @@ export function AdoptForm({ defaultCompany, plans }: { defaultCompany: string; p
   return (
     <SectionCard
       title='Adotta una zona o porta il tuo team'
-      info='L’importo va all’associazione partner: coordinamento, assicurazione e materiali dei volontari nelle zone scelte.'
+      info={
+        <InfoDot label='Informazioni'>
+          {
+            'L’importo va all’associazione partner: coordinamento, assicurazione e materiali dei volontari nelle zone scelte.'
+          }
+        </InfoDot>
+      }
     >
       <form onSubmit={onSubmit} className='space-y-4'>
         <FormGrid>
