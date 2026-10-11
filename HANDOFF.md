@@ -56,6 +56,14 @@ Comando per Vercel (da `web/`): `vercel env add NOME production`, poi `vercel de
   conviene rimuoverle (`vercel env rm SUPABASE_SERVICE_ROLE_KEY production`).
 - La chiave di prova del POD hardware è nel kit del team POD: revocarla dalla Console POD a fine evento.
 
+## Giuria
+
+- Dossier: `docs/GIUDICI.md` (sorgente) e `docs/To.Be-dossier-giuria.pdf`, rigenerabile con
+  `node scripts/docs/dossier-pdf.mjs` da `web/`.
+- Account giuria in sola lettura: registrarlo su `/login`, poi da `web/` lanciare
+  `node --env-file=.env.local scripts/demo/judge-access.mjs <email>`. A fine evento, stesso comando con `--revoke`.
+- Codice: invitare i giudici sul repo privato con `gh api -X PUT repos/SPACE-EAGLE-IT/HackTurin/collaborators/<utente> -f permission=pull`.
+
 ## Dati demo
 
 - `node --env-file=.env.local scripts/demo/seed-business.mjs [--clear]`: appalti, interventi, missioni, donazioni,
